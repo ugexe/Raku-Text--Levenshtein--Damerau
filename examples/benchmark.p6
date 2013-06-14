@@ -11,7 +11,7 @@ sub MAIN(Int $runs = 10000) {
 		say @stats.join("\t");
 	}
 	say "------------------------------------------------";
-    {
+	{
 		say "#medium strings";
 		my @stats = timethis($runs, sub { edistance("four" x 1000,"fuoru" x 1000); }); 
 		say ~@stats;
