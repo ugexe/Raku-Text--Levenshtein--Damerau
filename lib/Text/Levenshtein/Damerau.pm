@@ -5,8 +5,9 @@ sub edistance ( $source, $target, $max_distance = 0, ) is export
 {
     my $source_length = $source.chars;
     my $target_length = $target.chars;
-    return ($source_length??$source_length!!$target_length) if(!$target_length || !$source_length);
-    return -1 if($max_distance !== 0 && abs($source_length - $target_length) > $max_distance);
+
+    return -1 if ($max_distance !== 0 && abs($source_length - $target_length) > $max_distance);
+    return ($source_length??$source_length!!$target_length) if (!$target_length || !$source_length);
 
     my $lengths_max = $source_length + $target_length;
     my Int %dictionary_count; 

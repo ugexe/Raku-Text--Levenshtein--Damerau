@@ -1,3 +1,4 @@
+use v6;
 use Test;
 plan 23;
 
@@ -17,12 +18,12 @@ is( edistance('xxx','x',1),    -1, 'test edistance > max distance setting');
 is( edistance('xxx','xx',1),    1, 'test edistance <= max distance setting');
 
 # some extra maxDistance tests
-is( edistance("xxx","xxxx",1),   1,  'test xs_edistance misc 1');
-is( edistance("xxx","xxxx",2),   1,  'test xs_edistance misc 2');
-is( edistance("xxx","xxxx",3),   1,  'test xs_edistance misc 3');
-is( edistance("xxxx","xxx",1),   1,  'test xs_edistance misc 4');
-is( edistance("xxxx","xxx",2),   1,  'test xs_edistance misc 5');
-is( edistance("xxxx","xxx",3),   1,  'test xs_edistance misc 6');
+is( edistance("xxx","xxxx",1),  1,  'test xs_edistance misc 1');
+is( edistance("xxx","xxxx",2),  1,  'test xs_edistance misc 2');
+is( edistance("xxx","xxxx",3),  1,  'test xs_edistance misc 3');
+is( edistance("xxxx","xxx",1),  1,  'test xs_edistance misc 4');
+is( edistance("xxxx","xxx",2),  1,  'test xs_edistance misc 5');
+is( edistance("xxxx","xxx",3),  1,  'test xs_edistance misc 6');
 
 
 # Test some utf8
