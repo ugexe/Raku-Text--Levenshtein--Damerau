@@ -48,7 +48,3 @@ Please report bugs to:
 # AUTHOR
 
 Nick Logan <`ugexe@cpan.org`\>
-
-# LICENSE AND COPYRIGHT
-
-This library is free software; you can redistribute it and/or modify it under the same terms as Perl itself.
