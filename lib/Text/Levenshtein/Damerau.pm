@@ -17,7 +17,7 @@ sub edistance ( $source, $target, $max_distance = 0, ) is export
     for 1..$source_length -> $source_index  {
         my $swap_count = 0;
         %dictionary_count{ $source.substr( $source_index - 1, 1 ) } = 0;
-        push @scores, [$lengths_max,$source_index];
+        push @scores, [$lengths_max,$source_index]; 
 
         for 1..$target_length -> $target_index {
             if ( $source_index == 1 ) {
@@ -59,3 +59,67 @@ sub edistance ( $source, $target, $max_distance = 0, ) is export
     my $score = @scores[$source_length+1][$target_length+1];
     return ($max_distance !== 0 && $max_distance < $score)??(-1)!!$score;
 }
+
+
+=encoding utf8
+
+=head1 NAME
+
+Text::Levenshtein::Damerau:: - Damerau Levenshtein edit distance.
+
+=head1 SYNOPSIS
+
+    use v6;
+    use Text::Levenshtein::Damerau;
+
+    say edistance('Neil','Niel');
+    # prints 1
+
+=head1 DESCRIPTION
+
+Returns the true Damerau Levenshtein edit distance of strings with adjacent transpositions. 
+
+    use Text::Levenshtein::Damerau;
+
+    say edistance('ⓕⓞⓤⓡ','ⓕⓤⓞⓡ'), 
+    # prints 1
+
+=head1 METHODS
+
+=head2 edistance
+
+Arguments: source string and target string.
+
+=over
+
+=item * I<OPTIONAL 3rd argument> int (max distance; only return results with $int distance or less). 0 = unlimited. Default = 0.
+
+=back
+
+Returns: int that represents the edit distance between the two argument. Stops calculations and returns -1 if max distance is set and reached.
+
+Calculates the edit distance between a source and target string.
+
+    use Text::Levenshtein::Damerau;
+    say edistance('AABBCC','AABCBCD');
+    # prints 2
+
+       # Max edit distance of 1
+    say edistance('AABBCC','AABCBCD',1); # distance is 2
+    # prints -1
+
+=head1 BUGS
+
+Please report bugs to:
+
+L<https://github.com/ugexe/Perl6-Text--Levenshtein--Damerau/issues>
+
+=head1 AUTHOR
+
+Nick Logan <F<ugexe@cpan.org>>
+
+=head1 LICENSE AND COPYRIGHT
+
+This library is free software; you can redistribute it and/or modify it under the same terms as Perl itself.
+
+=cut
