@@ -1,0 +1,6 @@
+{
+    "name"        : "Text::Levenshtein::Damerau",
+    "version"     : "*",
+    "description" : "Calculate Damerau Levenshtein edit distance for strings.",
+    "depends"     : [],
+}
