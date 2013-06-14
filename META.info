@@ -1,7 +1,8 @@
 {
     "name"        : "Text::Levenshtein::Damerau",
-    "version"     : "*",
+    "version"     : "0.1.0",
     "description" : "Calculate Damerau Levenshtein edit distance for strings.",
-    "depends"     : [],
+    "author"      : "ugexe",
+    "depends"     : [ ],
     "source-url"  : "git://github.com/ugexe/Perl6-Text--Levenshtein--Damerau.git",
 }
