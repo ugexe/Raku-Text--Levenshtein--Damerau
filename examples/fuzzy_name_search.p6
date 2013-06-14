@@ -1,12 +1,13 @@
 use v6;
 use Text::Levenshtein::Damerau;
 
-my @names = ( 	'Angela Smarts',
-				'Angela Sharron',
-				'Andrew North',
-				'Andy North',
-				'Andy Norths',
-				'Ameila Anderson',
+my @names = ( 
+	'Angela Smarts',
+	'Angela Sharron',
+	'Andrew North',
+	'Andy North',
+	'Andy Norths',
+	'Ameila Anderson',
 );
 
 say "[NAMES]: {@names.join(',')}";
