@@ -1,7 +1,7 @@
 module Text::Levenshtein::Damerau;
 use v6;
 
-sub edistance ( $source, $target, $max_distance = 0, ) is export
+sub edistance ( Str $source, Str $target, Int $max_distance = 0 ) is export
 {
     my $source_length = $source.chars;
     my $target_length = $target.chars;
@@ -104,7 +104,7 @@ Calculates the edit distance between a source and target string.
     say edistance('AABBCC','AABCBCD');
     # prints 2
 
-       # Max edit distance of 1
+    # Max edit distance of 1
     say edistance('AABBCC','AABCBCD',1); # distance is 2
     # prints -1
 
