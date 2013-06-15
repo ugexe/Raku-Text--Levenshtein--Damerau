@@ -1,7 +1,7 @@
 use v6;
 use Text::Levenshtein::Damerau;
 
-my @names = ( 
+my Str @names = ( 
 	'Angela Smarts',
 	'Angela Sharron',
 	'Andrew North',
@@ -12,13 +12,13 @@ my @names = (
 
 say "[NAMES]: {@names.join(',')}";
 say "Enter a name to fuzzy search against: ";
-my $fuzzy_name = $*IN.get;
+my Str $fuzzy_name = $*IN.get;
 
-my $best_match = "";
-my $best_distance;
+my Str $best_match = "";
+my Int $best_distance;
 
 for @names -> $name {
-	my $distance = edistance($fuzzy_name,$name);
+	my Int $distance = edistance($fuzzy_name,$name);
 	say "*$name - $distance";
 
 	if ( !$best_distance || ( $distance >= 0 && $distance < $best_distance ) ) {

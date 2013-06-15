@@ -7,19 +7,19 @@ sub MAIN(Int $runs = 10000) {
 	say "------------------------------------------------";
 	{
 		say "#small strings";
-		my @stats = timethis($runs,  sub { edistance("four","fuoru"); }); 
+		my Int @stats = timethis($runs,  sub { edistance("four","fuoru"); }); 
 		say @stats.join("\t");
 	}
 	say "------------------------------------------------";
 	{
 		say "#medium strings";
-		my @stats = timethis($runs, sub { edistance("four" x 1000,"fuoru" x 1000); }); 
+		my Int @stats = timethis($runs, sub { edistance("four" x 1000,"fuoru" x 1000); }); 
 		say ~@stats;
 	}
 	say "------------------------------------------------";
 	{
 		say "#large strings";
-		my @stats = timethis($runs, sub { edistance("four" x 100000,"fuoru" x 100000); }); 
+		my Int @stats = timethis($runs, sub { edistance("four" x 100000,"fuoru" x 100000); }); 
 		say ~@stats;
 	}
 	say "------------------------------------------------";
