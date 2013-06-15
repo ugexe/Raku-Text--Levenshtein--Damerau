@@ -3,6 +3,6 @@
     "version"     : "0.1.0",
     "description" : "Calculate Damerau Levenshtein edit distance for strings.",
     "author"      : "ugexe",
-    "depends"     : [ ],
+    "depends"     : [],
     "source-url"  : "git://github.com/ugexe/Perl6-Text--Levenshtein--Damerau.git",
 }
