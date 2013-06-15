@@ -26,10 +26,10 @@ sub edistance ( Str $source, Str $target, Int $max_distance = 0 ) is export
                 @scores[0][$target_index+1] = $lengths_max;
             }
 
-            my $target_char_count =
+            my Int $target_char_count =
                 %dictionary_count{ $target.substr( $target_index - 1, 1 ) };
 
-            my $swap_score = @scores[$target_char_count][$swap_count] +
+            my Int $swap_score = @scores[$target_char_count][$swap_count] +
                 ( $source_index - $target_char_count - 1 ) + 1 +
                 ( $target_index - $swap_count - 1 );
 
