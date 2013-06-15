@@ -7,12 +7,12 @@ sub edistance ( Str $source, Str $target, Int $max_distance = 0 ) is export
     my Int $target_length = $target.chars;
     my Int $lengths_max = $source_length + $target_length;
 
-    return -1 if ($max_distance !== 0 && abs($source_length - $target_length) > $max_distance);
+    return Nil if ($max_distance !== 0 && abs($source_length - $target_length) > $max_distance);
     return ($source_length??$source_length!!$target_length) if (!$target_length || !$source_length);
 
     my Int %dictionary_count; 
     my Int @scores = ( [$lengths_max,$lengths_max], [$lengths_max,0] );              
-
+    
     # Work Loops
     for 1..$source_length -> $source_index  {
         my Int $swap_count = 0;
@@ -57,5 +57,5 @@ sub edistance ( Str $source, Str $target, Int $max_distance = 0 ) is export
     }
  
     my Int $score = @scores[$source_length+1][$target_length+1];
-    return ($max_distance !== 0 && $max_distance < $score)??(-1)!!$score;
+    return ($max_distance !== 0 && $max_distance < $score)??(Nil)!!$score;
 }

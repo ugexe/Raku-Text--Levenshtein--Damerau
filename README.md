@@ -27,7 +27,7 @@ Arguments: source string and target string.
 
 - _OPTIONAL 3rd argument_ int (max distance; only return results with $int distance or less). 0 = unlimited. Default = 0.
 
-Returns: int that represents the edit distance between the two argument. Stops calculations and returns -1 if max distance is set and reached.
+Returns: int that represents the edit distance between the two argument. Stops calculations and returns Nil if max distance is set and reached.
 
 Calculates the edit distance between a source and target string.
 
@@ -37,7 +37,7 @@ Calculates the edit distance between a source and target string.
 
     # Max edit distance of 1
     say edistance('AABBCC','AABCBCD',1); # distance is 2
-    # prints -1
+    # prints Nil
 
 # BUGS
 
