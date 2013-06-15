@@ -3,19 +3,19 @@ use v6;
 
 sub edistance ( Str $source, Str $target, Int $max_distance = 0 ) is export
 {
-    my $source_length = $source.chars;
-    my $target_length = $target.chars;
+    my Int $source_length = $source.chars;
+    my Int $target_length = $target.chars;
+    my Int $lengths_max = $source_length + $target_length;
 
     return -1 if ($max_distance !== 0 && abs($source_length - $target_length) > $max_distance);
     return ($source_length??$source_length!!$target_length) if (!$target_length || !$source_length);
 
-    my $lengths_max = $source_length + $target_length;
     my Int %dictionary_count; 
     my Int @scores = ( [$lengths_max,$lengths_max], [$lengths_max,0] );              
 
     # Work Loops
     for 1..$source_length -> $source_index  {
-        my $swap_count = 0;
+        my Int $swap_count = 0;
         %dictionary_count{ $source.substr( $source_index - 1, 1 ) } = 0;
         push @scores, [$lengths_max,$source_index]; 
 
@@ -56,7 +56,7 @@ sub edistance ( Str $source, Str $target, Int $max_distance = 0 ) is export
           $source_index;
     }
  
-    my $score = @scores[$source_length+1][$target_length+1];
+    my Int $score = @scores[$source_length+1][$target_length+1];
     return ($max_distance !== 0 && $max_distance < $score)??(-1)!!$score;
 }
 
