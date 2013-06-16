@@ -1,31 +1,33 @@
 use v6;
 use Text::Levenshtein::Damerau;
+use Text::Levenshtein;
 use Benchmark;
 
-sub MAIN(Int $runs = 10000) {
+my Int $x    = 5; # string multiplier
+my Str $str1 = "four"  x $x;
+my Str $str2 = "fuoru" x $x;
+
+# Note speed advantage of Text::Levenshtein::Damerau::ld 
+# over Text::Levenshtein::distance after running :)
+
+sub MAIN(Int $runs = 10) {
 	say "start\t\tend\t\tdiff\tavg";
 	say "------------------------------------------------";
 	{
-		say "#small strings";
-		my Str $str1 = "four";
-		my Str $str2 = "fuor";
-		my Int @stats = timethis($runs,  sub { edistance($str1, $str2); }); 
+		say <# Text::Levenshtein::Damerau::dld($str1, $str2)>;
+		my Int @stats = timethis($runs,  sub { dld($str1, $str2); }); 
 		say @stats.join("\t");
 	}
 	say "------------------------------------------------";
 	{
-		say "#medium strings";
-		my Str $str1 = "four" x 1000;
-		my Str $str2 = "fuoru" x 1000;
-		my Int @stats = timethis($runs, sub { edistance($str1, $str2); }); 
+		say <# Text::Levenshtein::Damerau::ld($str1, $str2)>;
+		my Int @stats = timethis($runs, sub { ld($str1, $str2); }); 
 		say @stats.join("\t");
 	}
 	say "------------------------------------------------";
 	{
-		say "#large strings";
-		my Str $str1 = "four" x 100000;
-		my Str $str2 = "fuoru" x 100000;
-		my Int @stats = timethis($runs, sub { edistance($str1, $str2); }); 
+		say <# Text::Levenshtein::distance($str1, $str2)>;
+		my Int @stats = timethis($runs, sub { distance($str1, $str2); }); 
 		say @stats.join("\t");
 	}
 	say "------------------------------------------------";

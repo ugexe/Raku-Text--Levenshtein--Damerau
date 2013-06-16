@@ -1,42 +1,64 @@
 # NAME
 
-Text::Levenshtein::Damerau:: - Damerau Levenshtein edit distance.
+Text::Levenshtein::Damerau:: - Levenshtein and Damerau Levenshtein edit distances.
 
 # SYNOPSIS
 
     use v6;
     use Text::Levenshtein::Damerau;
 
-    say edistance('Neil','Niel');
+    say dld('Neil','Niel');
     # prints 1
+
+    say ld('Neil','Niel');
+    prints 2
 
 # DESCRIPTION
 
-Returns the true Damerau Levenshtein edit distance of strings with adjacent transpositions. 
+Returns the true Levenshtein or Damerau Levenshtein edit distance of strings with adjacent transpositions. 
 
     use Text::Levenshtein::Damerau;
 
-    say edistance('ⓕⓞⓤⓡ','ⓕⓤⓞⓡ'), 
+    say dld('ⓕⓞⓤⓡ','ⓕⓤⓞⓡ'), 
     # prints 1
 
 # METHODS
 
-## edistance
+## dld
+
+Damerau Levenshtein Distance (Levenshtein Distance including transpositions)
 
 Arguments: source string and target string.
 
-- _OPTIONAL 3rd argument_ int (max distance; only return results with $int distance or less). 0 = unlimited. Default = 0.
+- _OPTIONAL 3rd argument_ int $max distance. 0 = unlimited. Default = 0.
 
 Returns: int that represents the edit distance between the two argument. Stops calculations and returns Nil if max distance is set and reached.
 
-Calculates the edit distance between a source and target string.
 
     use Text::Levenshtein::Damerau;
-    say edistance('AABBCC','AABCBCD');
+    say dld('AABBCC','AABCBCD');
     # prints 2
 
     # Max edit distance of 1
-    say edistance('AABBCC','AABCBCD',1); # distance is 2
+    say dld('AABBCC','AABCBCD',1); # distance is 2
+    # prints Nil
+
+## ld
+
+Levenshtein Distance (no transpositions; many times faster than Text::Levenshtein's &distance)
+
+Arguments: source string and target string.
+
+- _OPTIONAL 3rd argument_ int $max distance. 0 = unlimited. Default = 0.
+
+Returns: int that represents the edit distance between the two argument. Stops calculations and returns Nil if max distance is set and reached.
+
+    use Text::Levenshtein::Damerau;
+    say ld('AABBCC','AABCBCD');
+    # prints 3
+
+    # Max edit distance of 1
+    say ld('AABBCC','AABCBCD',1); # distance is 2
     # prints Nil
 
 # BUGS

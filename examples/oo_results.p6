@@ -2,14 +2,15 @@ use v6;
 use Text::Levenshtein::Damerau;
 
 my @names = 'John','Jonathan','Jose','Juan','Jimmy';
+my $name_mispelling = 'Jonh';
 
 my $dl = Text::Levenshtein::Damerau.new(
-	max_distance 	=> 10, 
-	targets 		=> @names,
+#	max_distance	=> 10, 
+	targets			=> @names,
 );
 
-# Lets search for a 'John' but mistyped...
-$dl.get_results(source => 'Jonh');
+say "Lets search for a 'John' but mistyped...";
+$dl.get_results(source => $name_mispelling);
 
 # ex. %results<string> = {index => #, distance => #}
 my %results = $dl.results;
