@@ -18,7 +18,7 @@ sub MAIN(Int $runs = 10000) {
 		my Str $str1 = "four" x 1000;
 		my Str $str2 = "fuoru" x 1000;
 		my Int @stats = timethis($runs, sub { edistance($str1, $str2); }); 
-		say ~@stats;
+		say @stats.join("\t");
 	}
 	say "------------------------------------------------";
 	{
@@ -26,7 +26,7 @@ sub MAIN(Int $runs = 10000) {
 		my Str $str1 = "four" x 100000;
 		my Str $str2 = "fuoru" x 100000;
 		my Int @stats = timethis($runs, sub { edistance($str1, $str2); }); 
-		say ~@stats;
+		say @stats.join("\t");
 	}
 	say "------------------------------------------------";
 }

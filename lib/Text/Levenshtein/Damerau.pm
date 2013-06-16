@@ -14,12 +14,12 @@ sub edistance ( Str $source, Str $target, Int $max_distance = 0 ) is export
     my Int @scores = ( [$lengths_max,$lengths_max], [$lengths_max,0] );              
     
     # Work Loops
-    for 1..$source_length -> $source_index  {
+    for 1..$source_length -> Int $source_index  {
         my Int $swap_count = 0;
         %dictionary_count{ $source.substr( $source_index - 1, 1 ) } = 0;
         push @scores, [$lengths_max,$source_index]; 
 
-        for 1..$target_length -> $target_index {
+        for 1..$target_length -> Int $target_index {
             if ( $source_index == 1 ) {
                 %dictionary_count{ $target.substr( $target_index - 1, 1 ) } = 0;
                 @scores[1][$target_index+1] = $target_index;
