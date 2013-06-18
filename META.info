@@ -4,5 +4,5 @@
     "description" : "Calculate Damerau Levenshtein edit distance for strings.",
     "author"      : "ugexe",
     "depends"     : [],
-    "source-url"  : "git://github.com/ugexe/Perl6-Text--Levenshtein--Damerau.git",
+    "source-url"  : "git://github.com/ugexe/Perl6-Text--Levenshtein--Damerau.git"
 }
