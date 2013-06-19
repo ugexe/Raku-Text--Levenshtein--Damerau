@@ -17,7 +17,7 @@ my Str $fuzzy_name = $*IN.get;
 my Str $best_match = "";
 my Int $best_distance;
 
-for @names -> $name {
+for @names -> Str $name {
 	my Int $distance = edistance($fuzzy_name,$name);
 	say "*$name - $distance";
 
