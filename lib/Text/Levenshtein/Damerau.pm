@@ -9,7 +9,9 @@ class Text::Levenshtein::Damerau;
 # option to pass a @.source to iterate over each $.source
 # add type to @.targets (change @.targets to @!targets for Str?)
 # pod? or just README.md?
-# credit Ben Bullock for his levenshtein work
+# properly credit Ben Bullock for his levenshtein work
+# max_distance tests for ld
+# break dld and ld into their own modules for speed without object overhead?
 
 # Values the user can edit
 has @.targets       is rw;
@@ -56,7 +58,8 @@ sub dld ( Str $source, Str $target, Int $max_distance = 0 ) returns Int is expor
     return ($source_length??$source_length!!$target_length) if (!$target_length || !$source_length);
 
     my Int %dictionary_count; 
-    my Int @scores = ( [$lengths_max,$lengths_max], [$lengths_max,0] );              
+    my Int @scores :shape($source_length + 1, $target_length + 1) 
+        = ( [$lengths_max,$lengths_max], [$lengths_max,0] );              
     
     # Work Loops
     for 1..$source_length -> Int $source_index  {
@@ -105,19 +108,31 @@ sub dld ( Str $source, Str $target, Int $max_distance = 0 ) returns Int is expor
 }
 
 
-sub ld ( Str $source, Str $target, Int $max_distance = 0 ) is export
+sub ld ( Str $source, Str $target, Int $max_distance = 0 ) returns Int is export
 {
     # optimized levenshtein algorithm modified from
     # Ben Bullock's (Perl 5) Text::Fuzzy XS/C code
+
+    # if $col_min is typed as Int it complains that @scores[#][#] is
+    # type Any. I have probably not typed the 2d array properly.
+
     my Int $source_length = $source.chars;
     my Int $target_length = $target.chars;
     my Int $large_value;
 
-    if ($max_distance >= 0) {
+
+    return Nil if ($max_distance !== 0 && abs($source_length - $target_length) > $max_distance);
+    return ($source_length??$source_length!!$target_length) if (!$target_length || !$source_length);
+
+    # is this worth the penalty hit for entire dictionaries for a single occurance?
+    # return 0 if $source eq $target;
+
+    # some cruft that will be refactored
+    if $max_distance > 0 {
         $large_value = $max_distance + 1;
     }
     else {
-        if ($target_length > $source_length) {
+        if $target_length > $source_length {
             $large_value = $target_length;
         }
         else {
@@ -125,15 +140,9 @@ sub ld ( Str $source, Str $target, Int $max_distance = 0 ) is export
         }
     }
 
-    my @scores;
+    my Int @scores :shape(2, $target_length + 1) = ([0..$target_length],[]);
 
-    # move this loop inside the second for loop below?
-    loop (my $j = 0; $j <= $target_length; $j++) {
-        @scores[0][$j] = $j;
-    }
-
-
-    for 1..$source_length -> Int $source_index  {
+    for 1..$source_length+1 -> Int $source_index  {
         my Int $next;
         my Int $prev;
         my Str $source_char = $source.substr($source_index-1,1);
@@ -141,11 +150,11 @@ sub ld ( Str $source, Str $target, Int $max_distance = 0 ) is export
         my Int $min_target = 1;
         my Int $max_target = $target_length;
 
-        if ($max_distance >= 0) {
-            if ($source_index > $max_distance) {
+        if $max_distance > 0 {
+            if $source_index > $max_distance {
                 $min_target = $source_index - $max_distance;
             }
-            if ($target_length > $max_distance + $source_index) {
+            if $target_length > $max_distance + $source_index {
                 $max_target = $max_distance + $source_index;
             }
         }
@@ -161,20 +170,18 @@ sub ld ( Str $source, Str $target, Int $max_distance = 0 ) is export
 
         @scores[$next][0] = $source_index;
 
-        for 1..$target_length -> Int $target_index  {
-            if ($target_length < $min_target || $target_length > $max_target) {
-                @scores[$next][$target_length] = $large_value;
+        for 1..$target_length+1 -> Int $target_index  {
+            if ($target_index < $min_target || $target_index > $max_target) {
+                @scores[$next][$target_index] = $large_value;
             }
             else {
-                my Str $target_char = $target.substr($target_index - 1, 1);
-
-                if ($source_char eq $target_char) {
-                    @scores[$next][$target_length] = @scores[$prev][$target_length - 1];
+                if $source_char eq $target.substr($target_index - 1, 1) {
+                    @scores[$next][$target_index] = @scores[$prev][$target_index - 1];
                 }
                 else {
-                    my Int $delete     = @scores[$prev][$target_length]     + 1; #[% delete_cost %];
-                    my Int $insert     = @scores[$next][$target_length - 1] + 1; #[% insert_cost %];
-                    my Int $substitute = @scores[$prev][$target_length - 1] + 1; #[% substitute_cost %];
+                    my Int $delete     = @scores[$prev][$target_index]     + 1; #[% delete_cost %];
+                    my Int $insert     = @scores[$next][$target_index - 1] + 1; #[% insert_cost %];
+                    my Int $substitute = @scores[$prev][$target_index - 1] + 1; #[% substitute_cost %];
                     my Int $minimum    = $delete;
 
                     if ($insert < $minimum) {
@@ -183,18 +190,20 @@ sub ld ( Str $source, Str $target, Int $max_distance = 0 ) is export
                     if ($substitute < $minimum) {
                         $minimum = $substitute;
                     }
-                    @scores[$next][$target_length] = $minimum;
+
+                    @scores[$next][$target_index] = $minimum;
                 }
             }
 
-            if ($col_min.defined && @scores[$next][$target_length] < $col_min) {
+
+            if ($col_min.defined && @scores[$next][$target_index] < $col_min) {
                 $col_min = @scores[$next][$target_length];
             }
         }
 
-        if ($max_distance > 0) {
+        if $max_distance > 0 {
             if ($col_min.defined && $col_min > $max_distance) {
-                return 10000;
+                return Nil;
             }
         }
     }

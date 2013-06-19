@@ -1,6 +1,5 @@
 use v6;
 use Text::Levenshtein::Damerau;
-use Text::Levenshtein;
 use Benchmark;
 
 my Int $x    = 5; # string multiplier
@@ -22,12 +21,6 @@ sub MAIN(Int $runs = 10) {
 	{
 		say <# Text::Levenshtein::Damerau::ld($str1, $str2)>;
 		my Int @stats = timethis($runs, sub { ld($str1, $str2); }); 
-		say @stats.join("\t");
-	}
-	say "------------------------------------------------";
-	{
-		say <# Text::Levenshtein::distance($str1, $str2)>;
-		my Int @stats = timethis($runs, sub { distance($str1, $str2); }); 
 		say @stats.join("\t");
 	}
 	say "------------------------------------------------";

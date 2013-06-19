@@ -7,15 +7,15 @@ Text::Levenshtein::Damerau:: - Levenshtein and Damerau Levenshtein edit distance
     use v6;
     use Text::Levenshtein::Damerau;
 
-    say dld('Neil','Niel');
+    say dld('Neil','Niel'); # damerau levenstein distance
     # prints 1
 
-    say ld('Neil','Niel');
+    say ld('Neil','Niel'); # levenshtein distance
     prints 2
 
 # DESCRIPTION
 
-Returns the true Levenshtein or Damerau Levenshtein edit distance of strings with adjacent transpositions. 
+Returns the true Levenshtein or Damerau Levenshtein edit distance of strings with adjacent transpositions. Experimental OO features started; example in examples/oo_results.p6
 
     use Text::Levenshtein::Damerau;
 
@@ -49,7 +49,7 @@ Levenshtein Distance (no transpositions; many times faster than Text::Levenshtei
 
 Arguments: source string and target string.
 
-- _OPTIONAL 3rd argument_ int $max distance. 0 = unlimited. Default = 0.
+- _OPTIONAL 3rd argument_ int $max distance. 0 = unlimited. Default = 0. 
 
 Returns: int that represents the edit distance between the two argument. Stops calculations and returns Nil if max distance is set and reached.
 
