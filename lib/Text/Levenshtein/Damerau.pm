@@ -120,9 +120,6 @@ sub ld ( Str $source, Str $target, Int $max_distance = 0 ) returns Int is export
     return Nil if ($max_distance !== 0 && abs($source_length - $target_length) > $max_distance);
     return ($source_length??$source_length!!$target_length) if (!$target_length || !$source_length);
 
-    # is this worth the penalty hit for entire dictionaries for a single occurance?
-    # return 0 if $source eq $target;
-
     # some cruft that will be refactored
     if $max_distance > 0 {
         $large_value = $max_distance + 1;
@@ -142,7 +139,7 @@ sub ld ( Str $source, Str $target, Int $max_distance = 0 ) returns Int is export
         my Int $next;
         my Int $prev;
         my Str $source_char = $source.substr($source_index-1,1);
-        my $col_min = $large_value;
+        my Int $col_min = $large_value;
         my Int $min_target = 1;
         my Int $max_target = $target_length;
 
@@ -192,13 +189,13 @@ sub ld ( Str $source, Str $target, Int $max_distance = 0 ) returns Int is export
             }
 
 
-            if ($col_min.defined && @scores[$next][$target_index] < $col_min) {
-                $col_min = @scores[$next][$target_length];
+            if @scores[$next][$target_index] < $col_min {
+                $col_min = @scores[$next][$target_index];
             }
         }
 
         if $max_distance > 0 {
-            if ($col_min.defined && $col_min > $max_distance) {
+            if $col_min > $max_distance {
                 return Nil;
             }
         }

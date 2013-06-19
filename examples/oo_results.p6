@@ -1,4 +1,5 @@
 use v6;
+use lib 'lib';
 use Text::Levenshtein::Damerau;
 
 my @names = 'John','Jonathan','Jose','Juan','Jimmy';
