@@ -1,9 +1,5 @@
 class Text::Levenshtein::Damerau;
 
-# WARNING
-# edistance is the only stable (and documented) function.
-# The rest of the (undocumented) methods and API may change.
-
 # TODO
 # option to ignore case
 # option to pass a @.source to iterate over each $.source
