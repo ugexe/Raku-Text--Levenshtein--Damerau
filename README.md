@@ -58,7 +58,7 @@ Returns: int that represents the edit distance between the two argument. Stops c
     # prints 3
 
     # Max edit distance of 1
-    say ld('AABBCC','AABCBCD',1); # distance is 2
+    say ld('AABBCC','AABCBCD',1); # distance is 3
     # prints Nil
 
 # BUGS
