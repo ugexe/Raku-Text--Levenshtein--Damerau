@@ -45,7 +45,7 @@ Returns: int that represents the edit distance between the two argument. Stops c
 
 ## ld
 
-Levenshtein Distance (no transpositions; many times faster than Text::Levenshtein's &distance)
+Levenshtein Distance (no transpositions)
 
 Arguments: source string and target string.
 
