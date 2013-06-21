@@ -10,7 +10,7 @@ class Text::Levenshtein::Damerau;
 # break dld and ld into their own modules for speed without object overhead?
 
 # Values the user can edit
-has @.targets       is rw;
+has Str @.targets       is rw;
 has Str $.source        is rw;
 has Int $.max_distance  is rw;
 
@@ -44,14 +44,14 @@ method get_results(:$.source) {
 
 
 
-sub dld ( Str $source, Str $target, Int $max_distance = 0 ) returns Int is export
+sub dld ( Str $source, Str $target, Int $max_distance = 0 ) returns Num is export
 {
     my Int $source_length = $source.chars;
     my Int $target_length = $target.chars;
     my Int $lengths_max = $source_length + $target_length;
 
-    return Nil if ($max_distance !== 0 && abs($source_length - $target_length) > $max_distance);
-    return ($source_length??$source_length!!$target_length) if (!$target_length || !$source_length);
+    return Inf if ($max_distance !== 0 && abs($source_length - $target_length) > $max_distance);
+    return ($source_length??$source_length.Num!!$target_length.Num) if (!$target_length || !$source_length);
 
     my Int %dictionary_count; 
     my Int @scores :shape($source_length + 1, $target_length + 1) 
@@ -99,26 +99,21 @@ sub dld ( Str $source, Str $target, Int $max_distance = 0 ) returns Int is expor
         # This is where the max_distance abort ideally happens
     }
  
-    my Int $score = @scores[$source_length+1][$target_length+1];
-    return ($max_distance !== 0 && $max_distance < $score)??(Nil)!!$score;
+    my Num $score = @scores[$source_length+1][$target_length+1].Num;
+    return ($max_distance !== 0 && $max_distance < $score)??(Inf)!!$score;
 }
 
 
-sub ld ( Str $source, Str $target, Int $max_distance = 0 ) returns Int is export
+sub ld ( Str $source, Str $target, Int $max_distance = 0 ) returns Num is export
 {
-    # optimized levenshtein algorithm modified from
-    # Ben Bullock's (Perl 5) Text::Fuzzy XS/C code
-
-    # if $col_min is typed as Int it complains that @scores[#][#] is
-    # type Any. I have probably not typed the 2d array properly.
-
     my Int $source_length = $source.chars;
     my Int $target_length = $target.chars;
+
+    #return Inf if ($max_distance !== 0 && abs($source_length - $target_length) > $max_distance);
+    return ($source_length??$source_length.Num!!$target_length.Num) if (!$target_length || !$source_length);
+
+    my Int @scores :shape(2, $target_length + 1) = ([0..$target_length],[]);
     my Int $large_value;
-
-
-    return Nil if ($max_distance !== 0 && abs($source_length - $target_length) > $max_distance);
-    return ($source_length??$source_length!!$target_length) if (!$target_length || !$source_length);
 
     # some cruft that will be refactored
     if $max_distance > 0 {
@@ -133,7 +128,6 @@ sub ld ( Str $source, Str $target, Int $max_distance = 0 ) returns Int is export
         }
     }
 
-    my Int @scores :shape(2, $target_length + 1) = ([0..$target_length],[]);
 
     for 1..$source_length+1 -> Int $source_index  {
         my Int $next;
@@ -194,12 +188,13 @@ sub ld ( Str $source, Str $target, Int $max_distance = 0 ) returns Int is export
             }
         }
 
-        if $max_distance > 0 {
-            if $col_min > $max_distance {
-                return Nil;
-            }
-        }
+        # doesnt work when the expected score == max_distance
+        #if $max_distance !== 0 && $col_min > $max_distance {
+        #    return Inf;
+        #}
     }
 
-    return @scores[$source_length % 2][$target_length];
+    
+    my $score = @scores[$source_length % 2][$target_length].Num;
+    return ($score > $max_distance && $max_distance !== 0)??Inf!!$score;
 }

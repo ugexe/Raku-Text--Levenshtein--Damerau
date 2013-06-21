@@ -32,7 +32,7 @@ Arguments: source string and target string.
 
 - _OPTIONAL 3rd argument_ int $max distance. 0 = unlimited. Default = 0.
 
-Returns: int that represents the edit distance between the two argument. Stops calculations and returns Nil if max distance is set and reached.
+Returns: int that represents the edit distance between the two argument. Stops calculations and returns Inf if max distance is set and reached.
 
 
     use Text::Levenshtein::Damerau;
@@ -41,7 +41,7 @@ Returns: int that represents the edit distance between the two argument. Stops c
 
     # Max edit distance of 1
     say dld('AABBCC','AABCBCD',1); # distance is 2
-    # prints Nil
+    # prints Inf
 
 ## ld
 
@@ -51,7 +51,7 @@ Arguments: source string and target string.
 
 - _OPTIONAL 3rd argument_ int $max distance. 0 = unlimited. Default = 0. 
 
-Returns: int that represents the edit distance between the two argument. Stops calculations and returns Nil if max distance is set and reached.
+Returns: int that represents the edit distance between the two argument. Stops calculations and returns Inf if max distance is set and reached.
 
     use Text::Levenshtein::Damerau;
     say ld('AABBCC','AABCBCD');
@@ -59,7 +59,7 @@ Returns: int that represents the edit distance between the two argument. Stops c
 
     # Max edit distance of 1
     say ld('AABBCC','AABCBCD',1); # distance is 3
-    # prints Nil
+    # prints Inf
 
 # BUGS
 
