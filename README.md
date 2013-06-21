@@ -4,7 +4,6 @@ Text::Levenshtein::Damerau:: - Levenshtein and Damerau Levenshtein edit distance
 
 # SYNOPSIS
 
-    use v6;
     use Text::Levenshtein::Damerau;
 
     say dld('Neil','Niel'); # damerau levenstein distance
@@ -15,12 +14,39 @@ Text::Levenshtein::Damerau:: - Levenshtein and Damerau Levenshtein edit distance
 
 # DESCRIPTION
 
-Returns the true Levenshtein or Damerau Levenshtein edit distance of strings with adjacent transpositions. Experimental OO features started; example in examples/oo_results.p6
+Returns the true Levenshtein or Damerau Levenshtein edit distance of strings with adjacent transpositions. 
 
     use Text::Levenshtein::Damerau;
 
-    say dld('ⓕⓞⓤⓡ','ⓕⓤⓞⓡ'), 
-    # prints 1
+    my @names = 'John','Jonathan','Jose','Juan','Jimmy';
+    my $name_mispelling = 'Jonh';
+
+    my $dl = Text::Levenshtein::Damerau.new(
+        max_distance    => 0,       # default 
+        targets         => @names,  # required
+    );
+
+    say "Lets search for a 'John' but mistyped...";
+    $dl.get_results(source => $name_mispelling);
+
+    my %results = $dl.results;
+
+    # Display each string and is distance
+    say "INDEX\t\tDISTANCE\tSTRING";
+    for %results.kv -> $string,$info {
+        say "{$info<index>}\t\t{$info<distance>}\t\t$string\n";
+    }
+
+    # More info
+    say "----------------------------";
+    say "\$dl.best_distance:        {$dl.best_distance}";
+    say "\$dl.best_index:           {$dl.best_index}";
+    say "-";
+    say "\$dl.targets:              {~$dl.targets}";
+    say "\$dl.best_target:          {$dl.best_target}";
+    say "-";
+    say "\@names:                   {~@names}";
+    say "\@names[\$dl.best_index]   {@names[$dl.best_index]}";
 
 # METHODS
 

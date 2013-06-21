@@ -3,10 +3,8 @@ class Text::Levenshtein::Damerau;
 # TODO
 # option to ignore case
 # option to pass a @.source to iterate over each $.source
-# add type to @.targets (change @.targets to @!targets for Str?)
 # pod? or just README.md?
 # properly credit Ben Bullock for his levenshtein work
-# max_distance tests for ld
 # break dld and ld into their own modules for speed without object overhead?
 
 # Values the user can edit
@@ -15,9 +13,9 @@ has Str $.source        is rw;
 has Int $.max_distance  is rw;
 
 # Values the user can only read
-has %.results is rw;
+has Hash %.results      is rw;
 has Int $.best_index    is rw;
-has Int $.best_distance is rw;
+has Num $.best_distance is rw;
 has Str $.best_target   is rw;
 
 
