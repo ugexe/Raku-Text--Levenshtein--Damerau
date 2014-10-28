@@ -23,6 +23,6 @@ install:
 before_script:
     - panda list --installed --verbose
 script:
-    - prove -e perl6 -lrv t/ 
+    - prove -e 'perl6 -lrv' t/ 
 after_success:
 #   do coveralls.io testing
