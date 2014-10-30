@@ -1,45 +1,49 @@
 use v6;
 
+# TODO:
+# Perl6-ify the code
+# Try to implement $max_distance for damerau levenshtein
+# Switch levenshtein to 2 vector version?
+# More helpers, like ordering the %.results, transposition => 0 (use &ld)
+
 class Text::Levenshtein::Damerau {
 
     has Str @.targets;
-    has Str $.source;
-    has Int $.max_distance;
-
+    has Str @.sources;
+    has Int $.max_distance;  # undef = no max distance
+    has Int $.results_limit; # Only return X closest results
     has Hash %.results       is rw;
     has Int $.best_index     is rw;
     has Num $.best_distance  is rw;
     has Str $.best_target    is rw;
 
 
-    submethod BUILD(:@!targets, Str :$!source, Int :$!max_distance = 0) {
+    submethod BUILD(:@!sources, :@!targets, Int :$!max_distance = 0) {
         # nothing to do here, the signature binding
         # does all the work for us.
     }
 
-
-    method get_results(Str :$source = $.source) {    
-        # use loop instead of for so we can return the index in some cases
-        loop (my Int $index = 0; $index <= @.targets.elems - 1; $index++) {
-            my Str $target     = @.targets[$index];
-            my $distance       = dld( $source, $target, $.max_distance );
-            %.results{$target} = { index => $index, distance => $distance };
-
-            if !$.best_distance.defined || $.best_distance > $distance {
-                $.best_index    = $index;
-                $.best_distance = $distance;
-                $.best_target   = $target;
+    method get_results {    
+        await do for @.sources -> $source {
+            await do for @.targets -> $target {
+                start {
+                    my $distance       = dld( $source, $target, $.max_distance );
+                    %.results{$target} = { distance => $distance };
+        
+                    if !$.best_distance.defined || $.best_distance > $distance {
+                        $.best_distance = $distance;
+                        $.best_target   = $target;
+                    }
+                }
             }
         }
     }
 
-
-
+    # Core algorithm functions
     sub dld ( Str $source, Str $target, Int $max_distance = 0 ) returns Num is export {
         my Int $source_length = $source.chars;
         my Int $target_length = $target.chars;
         my Int $lengths_max = $source_length + $target_length;
-
         return Inf if ($max_distance !== 0 && abs($source_length - $target_length) > $max_distance);
         return ($source_length??$source_length.Num!!$target_length.Num) if (!$target_length || !$source_length);
 
@@ -96,7 +100,6 @@ class Text::Levenshtein::Damerau {
     sub ld ( Str $source, Str $target, Int $max_distance = 0 ) returns Num is export {
         my Int $source_length = $source.chars;
         my Int $target_length = $target.chars;
-
         #return Inf if ($max_distance !== 0 && abs($source_length - $target_length) > $max_distance);
         return ($source_length??$source_length.Num!!$target_length.Num) if (!$target_length || !$source_length);
 
