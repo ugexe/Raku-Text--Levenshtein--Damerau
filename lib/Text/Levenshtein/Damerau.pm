@@ -82,18 +82,20 @@ class Text::Levenshtein::Damerau {
             @transpositionRow = ();
         }
 
-        for 0..$firstLength -> Int $init {
+        for 0..$firstLength+1 -> Int $init {
             @previousRow[$init] = $init;
         }
 
 
         my Str $lastSecondCh;
-        for 1..$secondLength -> Int $i {
+        for 1..$secondLength+1 -> Int $i {
+            warn "DEBUG i:$i";
+            warn "DEBUG max:$max";
             my Str $secondCh = $target.substr($i - 1, 1);
             @currentRow[0] = $i;
 
-            my Int $from = [min] 
-                $i - $max, 
+            my Int $from = [max] 
+                $i - $max - 1, 
                 1;
 
             my Int $to   = [min] 
