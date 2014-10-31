@@ -38,89 +38,53 @@ class Text::Levenshtein::Damerau {
         }
     }
 
-    # Java BUILD?
-    #public DamerauLevensteinMetric(int maxLength) {
-    #        currentRow = new int[maxLength + 1];
-    #        previousRow = new int[maxLength + 1];
-    #        transpositionRow = new int[maxLength + 1];
-    #}
-
 
     sub dld (Str $source is copy, Str $target is copy, Int $max is copy = 0) is export {
-        $max = $max > 0 ?? $max !! [max] $source.chars, $target.chars;
-        my Int $firstLength = $source.chars;
-        my Int $secondLength = $target.chars;
-        my Int @currentRow;
-        my Int @previousRow;
-        my Int @transpositionRow;
+        $max = $max > 0 ?? $max !! $source.chars max $target.chars;
+        my Int $sourceLength  = $source.chars;
+        my Int $targetLength = $target.chars;
+        my Int (@currentRow, @previousRow, @transpositionRow);
 
-        if ($firstLength == 0) {
-            return $secondLength;
-        }
-        elsif ($secondLength == 0) {
-            return $firstLength;
-        }
+        return [max] $sourceLength,$targetLength if 0 ~~ any($sourceLength|$targetLength);
 
-        if ($firstLength > $secondLength) {
-            my Str $tmp   = $source;
-            $source       = $target;
-            $target       = $tmp;
-            $firstLength  = $secondLength;
-            $secondLength = $target.chars;
+        # Swap source/target so that $sourceLength always contains the shorter string
+        if ($sourceLength > $targetLength) {
+            ($source,$target)             .= reverse;
+            ($sourceLength,$targetLength) .= reverse;
         }
 
-        if ($max < 0) {
-            $max = $secondLength;
-        }
+        $max = $targetLength unless $max >= 0;
+        return Nil if $targetLength - $sourceLength > $max;
+        @currentRow      = @previousRow = @transpositionRow = ()
+            if $sourceLength > @currentRow.elems;
+        
+        @previousRow[$_] = $_ for 0..$sourceLength+1;
 
+        my Str $lastTargetCh = '';
+        for 1..$targetLength -> Int $i {
+            my Str $targetCh = $target.substr($i - 1, 1);
+            @currentRow[0]   = $i;
 
-        if ($secondLength - $firstLength > $max) {
-            return Nil;
-            # return $max + 1; or we can this to return Int and not Any for Nil
-        }
+            my Int $start = [max] $i - $max - 1, 1;
+            my Int $end   = [min] $i + $max + 1, $sourceLength;
 
-        if ($firstLength > @currentRow.elems) {
-            @currentRow       = ();
-            @previousRow      = ();
-            @transpositionRow = ();
-        }
+            my Str $lastSourceCh = '';
+            for $start..$end -> Int $j {
+                my Str $sourceCh = $source.substr($j - 1, 1);
+                my Int $cost     = $sourceCh eq $targetCh ?? 0 !! 1;
 
-        for 0..$firstLength+1 -> Int $init {
-            @previousRow[$init] = $init;
-        }
-
-        my Str $lastSecondCh = '';
-        loop (my Int $i = 1; $i <= $secondLength; $i++) {
-            my Str $secondCh = $target.substr($i - 1, 1);
-            @currentRow[0] = $i;
-
-            my Int $start = [max] 
-                $i - $max - 1, 
-                1;
-
-            my Int $end   = [min] 
-                $i + $max + 1, 
-                $firstLength;
-
-            my Str $lastFirstCh = '';
-            loop (my Int $j = $start; $j <= $end; $j++) {
-                my Str $firstCh = $source.substr($j - 1, 1);
-                my Int $cost  = $firstCh eq $secondCh ?? 0 !! 1;
-                my Int $value = [min] 
+                @currentRow[$j] = [min] 
                     @currentRow\[$j - 1] + 1, 
-                    @previousRow[$j>=@previousRow.elems??*-1!!$j] + 1,
-                    @previousRow[$j - 1] + $cost;
-                if ($firstCh eq $lastSecondCh && $secondCh eq $lastFirstCh) {
-                    $value = [min] 
-                        $value, 
-                        @transpositionRow[$j - 2] + $cost;
-                }
+                    @previousRow[$j >= @previousRow.elems ?? *-1 !! $j] + 1,
+                    @previousRow[$j - 1] + $cost,
+                    ($sourceCh eq $lastTargetCh && $targetCh eq $lastSourceCh)
+                        ?? @transpositionRow[$j - 2] + $cost
+                        !! $max;;
 
-                @currentRow[$j] = $value;
-                $lastFirstCh    = $firstCh;
+                $lastSourceCh = $sourceCh;
             }
 
-            $lastSecondCh = $secondCh;
+            $lastTargetCh = $targetCh;
 
             my Int @tempRow   = @transpositionRow;
             @transpositionRow = @previousRow;
@@ -128,100 +92,52 @@ class Text::Levenshtein::Damerau {
             @currentRow       = @tempRow;
         }
 
-        return @previousRow[$firstLength] <= $max ?? @previousRow[$firstLength] !! Nil;
+        return @previousRow[$sourceLength] <= $max ?? @previousRow[$sourceLength] !! Nil;
     }
 
+    sub ld ( Str $source is copy, Str $target is copy, Int $max is copy = 0 ) returns Any is export {
+        $max = $max > 0 ?? $max !! $source.chars max $target.chars;
+        my Int $sourceLength = $source.chars;
+        my Int $targetLength = $target.chars;
+        my Int (@currentRow, @previousRow);
 
-    sub ld ( Str $source, Str $target, Int $max = 0 ) returns Num is export {
-        my Int $source_length = $source.chars;
-        my Int $target_length = $target.chars;
-        #return Inf if ($max !== 0 && abs($source_length - $target_length) > $max);
-        return ($source_length??$source_length.Num!!$target_length.Num) if (!$target_length || !$source_length);
+        return [max] $sourceLength,$targetLength if 0 ~~ any($sourceLength|$targetLength);
+        $max = $targetLength unless $max >= 0;
 
-        my Array @scores = ([0..$target_length],[]);
-        my Int $large_value;
-
-        # some cruft that will be refactored
-        if $max > 0 {
-            $large_value = $max + 1;
-        }
-        else {
-            if $target_length > $source_length {
-                $large_value = $target_length;
-            }
-            else {
-                $large_value = $source_length;
-            }
+        # Swap source/target so that $sourceLength always contains the shorter string
+        if ($sourceLength > $targetLength) {
+            ($source,$target)             .= reverse;
+            ($sourceLength,$targetLength) .= reverse;
         }
 
+        return Nil if $targetLength - $sourceLength > $max;
+        @currentRow      = @previousRow= ()
+            if $sourceLength > @currentRow.elems;
 
-        for 1..$source_length+1 -> Int $source_index  {
-            my Int $next;
-            my Int $prev;
-            my Str $source_char = $source.substr($source_index-1,1);
-            my Int $col_min = $large_value;
-            my Int $min_target = 1;
-            my Int $max_target = $target_length;
+        @previousRow[$_] = $_ for 0..$sourceLength+1;
 
-            if $max > 0 {
-                if $source_index > $max {
-                    $min_target = $source_index - $max;
-                }
-                if $target_length > $max + $source_index {
-                    $max_target = $max + $source_index;
-                }
+        for 1..$targetLength+1 -> $i {
+            my Str $targetCh = $target.substr($i - 1, 1);
+            @currentRow[0]   = $i + 1;
+
+            for 1..$sourceLength+1 -> $j {
+                my Str $sourceCh = $source.substr($j - 1, 1);
+
+                @currentRow[$j] = [min] 
+                    @currentRow[$j-1] + 1,
+                    @previousRow[$j] + 1,
+                    @previousRow[$j-1] + ($targetCh eq $sourceCh ?? 0 !! 1);
+
+                return Nil if( @currentRow[0] == $j && $max < 
+                    (($targetLength - $sourceLength > @currentRow[@currentRow[0]])
+                    ?? ($targetLength - $sourceLength - @currentRow[@currentRow[0]]) 
+                    !! (@currentRow[@currentRow[0]] + $targetLength - $sourceLength))
+                );
             }
 
-            $next = $source_index % 2;
-
-            if ($next == 1) {
-                $prev = 0;
+            if $i < $targetLength {
+                @previousRow[$_] = @currentRow[$_] for 0..$targetLength+1;
             }
-            else {
-                $prev = 1;
-            }
-
-            @scores[$next][0] = $source_index;
-
-            for 1..$target_length+1 -> Int $target_index  {
-                if ($target_index < $min_target || $target_index > $max_target) {
-                    @scores[$next][$target_index] = $large_value;
-                }
-                else {
-                    if $source_char eq $target.substr($target_index - 1, 1) {
-                        @scores[$next][$target_index] = @scores[$prev][$target_index - 1];
-                    }
-                    else {
-                        my Int $delete     = @scores[$prev][$target_index]     + 1; #[% delete_cost %];
-                        my Int $insert     = @scores[$next][$target_index - 1] + 1; #[% insert_cost %];
-                        my Int $substitute = @scores[$prev][$target_index - 1] + 1; #[% substitute_cost %];
-                        my Int $minimum    = $delete;
-
-                        if ($insert < $minimum) {
-                            $minimum = $insert;
-                        }
-                        if ($substitute < $minimum) {
-                            $minimum = $substitute;
-                        }
-
-                        @scores[$next][$target_index] = $minimum;
-                    }
-                }
-
-
-                if @scores[$next][$target_index] < $col_min {
-                    $col_min = @scores[$next][$target_index];
-                }
-            }
-
-            # doesnt work when the expected score == max
-            #if $max !== 0 && $col_min > $max {
-            #    return Inf;
-            #}
         }
-
-        
-        my $score = @scores[$source_length % 2][$target_length].Num;
-        return ($score > $max && $max !== 0)??Inf!!$score;
     }
 }
