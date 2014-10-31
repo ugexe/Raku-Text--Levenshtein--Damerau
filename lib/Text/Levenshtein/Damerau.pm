@@ -100,19 +100,19 @@ class Text::Levenshtein::Damerau {
         my Int $sourceLength = $source.chars;
         my Int $targetLength = $target.chars;
         my Int (@currentRow, @previousRow);
+        my Int $diff = ($sourceLength max $targetLength) - ($sourceLength min $targetLength);
 
         return [max] $sourceLength,$targetLength if 0 ~~ any($sourceLength|$targetLength);
         $max = $targetLength unless $max >= 0;
 
-        # Swap source/target so that $sourceLength always contains the shorter string
+        #Swap source/target so that $sourceLength always contains the shorter string
         if ($sourceLength > $targetLength) {
             ($source,$target)             .= reverse;
             ($sourceLength,$targetLength) .= reverse;
         }
 
-        return Nil if $targetLength - $sourceLength > $max;
-        @currentRow      = @previousRow= ()
-            if $sourceLength > @currentRow.elems;
+        return Nil if $diff > $max;
+        @currentRow = @previousRow= () if $sourceLength > @currentRow.elems;
 
         @previousRow[$_] = $_ for 0..$sourceLength+1;
 
@@ -120,18 +120,21 @@ class Text::Levenshtein::Damerau {
             my Str $targetCh = $target.substr($i - 1, 1);
             @currentRow[0]   = $i + 1;
 
-            for 1..$sourceLength+1 -> $j {
+            my Int $start = [max] $i - $max - 1, 1;
+            my Int $end   = [min] $i + $max + 1, $sourceLength;
+
+            for $start..$end -> $j {
                 my Str $sourceCh = $source.substr($j - 1, 1);
 
                 @currentRow[$j] = [min] 
-                    @currentRow[$j-1] + 1,
-                    @previousRow[$j] + 1,
-                    @previousRow[$j-1] + ($targetCh eq $sourceCh ?? 0 !! 1);
+                    @currentRow\[$j - 1] + 1,
+                    @previousRow[$j    ] + 1,
+                    @previousRow[$j - 1] + ($targetCh eq $sourceCh ?? 0 !! 1);
 
                 return Nil if( @currentRow[0] == $j && $max < 
                     (($targetLength - $sourceLength > @currentRow[@currentRow[0]])
-                    ?? ($targetLength - $sourceLength - @currentRow[@currentRow[0]]) 
-                    !! (@currentRow[@currentRow[0]] + $targetLength - $sourceLength))
+                    ?? ($diff - @currentRow[@currentRow[0]]) 
+                    !! (@currentRow[@currentRow[0]] + $diff))
                 );
             }
 
@@ -139,5 +142,7 @@ class Text::Levenshtein::Damerau {
                 @previousRow[$_] = @currentRow[$_] for 0..$targetLength+1;
             }
         }
+
+        return @currentRow[*-1] <= $max ?? @currentRow[*-1] !! Nil;
     }
 }

@@ -40,9 +40,9 @@ is( ld("xxx","xxxx",3),             1,  'test ld misc 3');
 is( ld("xxxx","xxx",1),             1,  'test ld misc 4');
 is( ld("xxxx","xxx",2),             1,  'test ld misc 5');
 is( ld("xxxx","xxx",3),             1,  'test ld misc 6');
-is( ld("xxxxxx","xxx",2),         Inf,  'test ld misc 7');
+is( ld("xxxxxx","xxx",2),         Nil,  'test ld misc 7');
 is( ld("xxxxxx","xxx",3),           3,  'test ld misc 8');
-is( ld("a","xxxxxxxx",5),         Inf,  'test ld misc 9 (length shortcut)');
+is( ld("a","xxxxxxxx",5),         Nil,  'test ld misc 9 (length shortcut)');
 
 
 
