@@ -2,23 +2,22 @@ use v6;
 
 # TODO:
 # Perl6-ify the code
-# Try to implement $max_distance for damerau levenshtein
+# Try to implement $max for damerau levenshtein
 # Switch levenshtein to 2 vector version?
 # More helpers, like ordering the %.results, transposition => 0 (use &ld)
 
 class Text::Levenshtein::Damerau {
+    has @.targets;
+    has @.sources;
+    has $.max;  # Nil/-1 = no max distance
+    has $.results_limit; # Only return X closest results
+    has %.results       is rw;
+    has $.best_index     is rw;
+    has $.best_distance  is rw;
+    has $.best_target    is rw;
 
-    has Str @.targets;
-    has Str @.sources;
-    has Int $.max_distance;  # undef = no max distance
-    has Int $.results_limit; # Only return X closest results
-    has Hash %.results       is rw;
-    has Int $.best_index     is rw;
-    has Num $.best_distance  is rw;
-    has Str $.best_target    is rw;
 
-
-    submethod BUILD(:@!sources, :@!targets, Int :$!max_distance = 0) {
+    submethod BUILD(:@!sources, :@!targets, Int :$!max = 0) {
         # nothing to do here, the signature binding
         # does all the work for us.
     }
@@ -27,7 +26,7 @@ class Text::Levenshtein::Damerau {
         await do for @.sources -> $source {
             await do for @.targets -> $target {
                 start {
-                    my $distance       = dld( $source, $target, $.max_distance );
+                    my $distance       = dld( $source, $target, $.max );
                     %.results{$target} = { distance => $distance };
         
                     if !$.best_distance.defined || $.best_distance > $distance {
@@ -39,76 +38,112 @@ class Text::Levenshtein::Damerau {
         }
     }
 
-    # Core algorithm functions
-    sub dld ( Str $source, Str $target, Int $max_distance = 0 ) returns Num is export {
-        my Int $source_length = $source.chars;
-        my Int $target_length = $target.chars;
-        my Int $lengths_max = $source_length + $target_length;
-        return Inf if ($max_distance !== 0 && abs($source_length - $target_length) > $max_distance);
-        return ($source_length??$source_length.Num!!$target_length.Num) if (!$target_length || !$source_length);
+    # Java BUILD?
+    #public DamerauLevensteinMetric(int maxLength) {
+    #        currentRow = new int[maxLength + 1];
+    #        previousRow = new int[maxLength + 1];
+    #        transpositionRow = new int[maxLength + 1];
+    #}
 
-        my Int %dictionary_count; 
-        my Array @scores = ( [$lengths_max,$lengths_max], [$lengths_max,0] );              
-        
-        # Work Loops
-        for 1..$source_length -> Int $source_index  {
-            my Int $swap_count = 0;
-            %dictionary_count{ $source.substr( $source_index - 1, 1 ) } = 0;
-            push @scores, [$lengths_max,$source_index]; 
 
-            for 1..$target_length -> Int $target_index {
-                if $source_index == 1 {
-                    %dictionary_count{ $target.substr( $target_index - 1, 1 ) } = 0;
-                    @scores[1][$target_index+1] = $target_index;
-                    @scores[0][$target_index+1] = $lengths_max;
+    sub dld (Str $source is copy, Str $target is copy, Int $max is copy = 0) is export {
+        $max = $max > 0 ?? $max !! [max] $source.chars, $target.chars;
+        my Int $firstLength = $source.chars;
+        my Int $secondLength = $target.chars;
+        my Int @currentRow;
+        my Int @previousRow;
+        my Int @transpositionRow;
+
+        if ($firstLength == 0) {
+            return $secondLength;
+        }
+        elsif ($secondLength == 0) {
+            return $firstLength;
+        }
+
+        if ($firstLength > $secondLength) {
+            my Str $tmp   = $source;
+            $source       = $target;
+            $target       = $tmp;
+            $firstLength  = $secondLength;
+            $secondLength = $target.chars;
+        }
+
+        if ($max < 0) {
+            $max = $secondLength;
+        }
+
+
+        if ($secondLength - $firstLength > $max) {
+            return Nil;
+            # return $max + 1; or we can this to return Int and not Any for Nil
+        }
+
+        if ($firstLength > @currentRow.elems) {
+            @currentRow       = ();
+            @previousRow      = ();
+            @transpositionRow = ();
+        }
+
+        for 0..$firstLength+1 -> Int $init {
+            @previousRow[$init] = $init;
+        }
+
+        my Str $lastSecondCh = '';
+        loop (my Int $i = 1; $i <= $secondLength; $i++) {
+            my Str $secondCh = $target.substr($i - 1, 1);
+            @currentRow[0] = $i;
+
+            my Int $start = [max] 
+                $i - $max - 1, 
+                1;
+
+            my Int $end   = [min] 
+                $i + $max + 1, 
+                $firstLength;
+
+            my Str $lastFirstCh = '';
+            loop (my Int $j = $start; $j <= $end; $j++) {
+                my Str $firstCh = $source.substr($j - 1, 1);
+                my Int $cost  = $firstCh eq $secondCh ?? 0 !! 1;
+                my Int $value = [min] 
+                    @currentRow\[$j - 1] + 1, 
+                    @previousRow[$j>=@previousRow.elems??*-1!!$j] + 1,
+                    @previousRow[$j - 1] + $cost;
+                if ($firstCh eq $lastSecondCh && $secondCh eq $lastFirstCh) {
+                    $value = [min] 
+                        $value, 
+                        @transpositionRow[$j - 2] + $cost;
                 }
 
-                my Int $target_char_count =
-                    %dictionary_count{ $target.substr( $target_index - 1, 1 ) };
-
-                my Int $swap_score = @scores[$target_char_count][$swap_count] +
-                    ( $source_index - $target_char_count - 1 ) + 1 +
-                    ( $target_index - $swap_count - 1 );
-
-                if $source.substr( $source_index - 1, 1 ) 
-                   ne $target.substr( $target_index - 1, 1 ) {
-                    @scores[$source_index+1][$target_index+1] = [min]
-                        @scores[$source_index][$target_index]  +1,
-                        @scores[$source_index+1][$target_index]+1,
-                        @scores[$source_index][$target_index+1]+1,
-                        $swap_score;
-                }
-                else {
-                    $swap_count = $target_index;
-
-                    @scores[$source_index+1][$target_index+1] = [min] 
-                      @scores[$source_index][$target_index], $swap_score;
-                }
+                @currentRow[$j] = $value;
+                $lastFirstCh    = $firstCh;
             }
 
-            %dictionary_count{ $source.substr( $source_index - 1, 1 ) } =
-              $source_index;
+            $lastSecondCh = $secondCh;
 
-            # This is where the max_distance abort ideally happens
+            my Int @tempRow   = @transpositionRow;
+            @transpositionRow = @previousRow;
+            @previousRow      = @currentRow;
+            @currentRow       = @tempRow;
         }
-     
-        my Num $score = @scores[$source_length+1][$target_length+1].Num;
-        return ($max_distance !== 0 && $max_distance < $score)??(Inf)!!$score;
+
+        return @previousRow[$firstLength] <= $max ?? @previousRow[$firstLength] !! Nil;
     }
 
 
-    sub ld ( Str $source, Str $target, Int $max_distance = 0 ) returns Num is export {
+    sub ld ( Str $source, Str $target, Int $max = 0 ) returns Num is export {
         my Int $source_length = $source.chars;
         my Int $target_length = $target.chars;
-        #return Inf if ($max_distance !== 0 && abs($source_length - $target_length) > $max_distance);
+        #return Inf if ($max !== 0 && abs($source_length - $target_length) > $max);
         return ($source_length??$source_length.Num!!$target_length.Num) if (!$target_length || !$source_length);
 
         my Array @scores = ([0..$target_length],[]);
         my Int $large_value;
 
         # some cruft that will be refactored
-        if $max_distance > 0 {
-            $large_value = $max_distance + 1;
+        if $max > 0 {
+            $large_value = $max + 1;
         }
         else {
             if $target_length > $source_length {
@@ -128,12 +163,12 @@ class Text::Levenshtein::Damerau {
             my Int $min_target = 1;
             my Int $max_target = $target_length;
 
-            if $max_distance > 0 {
-                if $source_index > $max_distance {
-                    $min_target = $source_index - $max_distance;
+            if $max > 0 {
+                if $source_index > $max {
+                    $min_target = $source_index - $max;
                 }
-                if $target_length > $max_distance + $source_index {
-                    $max_target = $max_distance + $source_index;
+                if $target_length > $max + $source_index {
+                    $max_target = $max + $source_index;
                 }
             }
 
@@ -179,14 +214,14 @@ class Text::Levenshtein::Damerau {
                 }
             }
 
-            # doesnt work when the expected score == max_distance
-            #if $max_distance !== 0 && $col_min > $max_distance {
+            # doesnt work when the expected score == max
+            #if $max !== 0 && $col_min > $max {
             #    return Inf;
             #}
         }
 
         
         my $score = @scores[$source_length % 2][$target_length].Num;
-        return ($score > $max_distance && $max_distance !== 0)??Inf!!$score;
+        return ($score > $max && $max !== 0)??Inf!!$score;
     }
 }
