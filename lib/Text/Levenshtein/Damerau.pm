@@ -46,7 +46,7 @@ class Text::Levenshtein::Damerau {
     #}
 
 
-    sub dld (Str $source is copy, Str $target is copy, Int $max is copy = 0) returns Int is export {
+    sub dld (Str $source is copy, Str $target is copy, Int $max is copy = 0) is export {
         $max = $max > 0 ?? $max !! [max] $source.chars, $target.chars;
         my Int $firstLength = $source.chars;
         my Int $secondLength = $target.chars;
@@ -73,8 +73,10 @@ class Text::Levenshtein::Damerau {
             $max = $secondLength;
         }
 
+
         if ($secondLength - $firstLength > $max) {
-            return $max + 1;
+            return Nil;
+            # return $max + 1; or we can this to return Int and not Any for Nil
         }
 
         if ($firstLength > @currentRow.elems) {
