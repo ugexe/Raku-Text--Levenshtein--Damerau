@@ -7,14 +7,14 @@ use v6;
 # More helpers, like ordering the %.results, transposition => 0 (use &ld)
 
 class Text::Levenshtein::Damerau {
-    has Str @.targets;
-    has Str @.sources;
-    has Int $.max_distance;  # undef = no max distance
-    has Int $.results_limit; # Only return X closest results
-    has Hash %.results       is rw;
-    has Int $.best_index     is rw;
-    has Num $.best_distance  is rw;
-    has Str $.best_target    is rw;
+    has @.targets;
+    has @.sources;
+    has $.max_distance;  # undef = no max distance
+    has $.results_limit; # Only return X closest results
+    has %.results       is rw;
+    has $.best_index     is rw;
+    has $.best_distance  is rw;
+    has $.best_target    is rw;
 
 
     submethod BUILD(:@!sources, :@!targets, Int :$!max_distance = 0) {
@@ -89,29 +89,27 @@ class Text::Levenshtein::Damerau {
             @previousRow[$init] = $init;
         }
 
-
         my Str $lastSecondCh = '';
         loop (my Int $i = 1; $i <= $secondLength; $i++) {
             my Str $secondCh = $target.substr($i - 1, 1);
             @currentRow[0] = $i;
 
-            my Int $from = [max] 
+            my Int $start = [max] 
                 $i - $max - 1, 
                 1;
 
-            my Int $to   = [min] 
+            my Int $end   = [min] 
                 $i + $max + 1, 
                 $firstLength;
 
             my Str $lastFirstCh = '';
-            loop (my Int $j = $from; $j <= $to; $j++) {
+            loop (my Int $j = $start; $j <= $end; $j++) {
                 my Str $firstCh = $source.substr($j - 1, 1);
                 my Int $cost  = $firstCh eq $secondCh ?? 0 !! 1;
                 my Int $value = [min] 
                     @currentRow\[$j - 1] + 1, 
-                    @previousRow[$j    ] + 1,
+                    @previousRow[$j>=@previousRow.elems??*-1!!$j] + 1,
                     @previousRow[$j - 1] + $cost;
-
                 if ($firstCh eq $lastSecondCh && $secondCh eq $lastFirstCh) {
                     $value = [min] 
                         $value, 
@@ -129,8 +127,8 @@ class Text::Levenshtein::Damerau {
             @previousRow      = @currentRow;
             @currentRow       = @tempRow;
         }
-        return @previousRow[$firstLength];
 
+        return @previousRow[$firstLength] <= $max ?? @previousRow[$firstLength] !! Nil;
     }
 
 
