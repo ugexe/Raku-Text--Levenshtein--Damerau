@@ -53,11 +53,6 @@ class Text::Levenshtein::Damerau {
         my Int @currentRow;
         my Int @previousRow;
         my Int @transpositionRow;
-        warn "DEBUG source:$source";
-        warn "DEBUG target:$target";
-        warn "DEBUG fl:$firstLength";
-        warn "DEBUG sl:$secondLength";
-        warn "DEBUG max:$max";
 
         if ($firstLength == 0) {
             return $secondLength;
@@ -94,7 +89,7 @@ class Text::Levenshtein::Damerau {
 
 
         my Str $lastSecondCh = '';
-        for 1..$secondLength+1 -> Int $i {
+        loop (my Int $i = 1; $i <= $secondLength; $i++) {
             my Str $secondCh = $target.substr($i - 1, 1);
             @currentRow[0] = $i;
 
@@ -106,13 +101,9 @@ class Text::Levenshtein::Damerau {
                 $i + $max + 1, 
                 $firstLength;
 
-            warn "DEBUG from:$from";
-            warn "DEBUG to:$to";
-
             my Str $lastFirstCh = '';
-            for $from..$to+1 -> Int $j {
+            loop (my Int $j = $from; $j <= $to; $j++) {
                 my Str $firstCh = $source.substr($j - 1, 1);
-
                 my Int $cost  = $firstCh eq $secondCh ?? 0 !! 1;
                 my Int $value = [min] 
                     @currentRow\[$j - 1] + 1, 
@@ -120,13 +111,6 @@ class Text::Levenshtein::Damerau {
                     @previousRow[$j - 1] + $cost;
 
                 if ($firstCh eq $lastSecondCh && $secondCh eq $lastFirstCh) {
-                    warn "DEBUG firstCh:$firstCh";
-                    warn "DEBUG lastSecondCh:$lastSecondCh";
-                    warn "DEBUG secondCh:$secondCh";
-                    warn "DEBUG lastFirstCh:$lastFirstCh";
-                    warn "DEBUG i:$i";
-                    warn "DEBUG j:$j";
-
                     $value = [min] 
                         $value, 
                         @transpositionRow[$j - 2] + $cost;
