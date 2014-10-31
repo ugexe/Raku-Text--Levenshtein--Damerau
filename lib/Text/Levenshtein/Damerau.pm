@@ -46,7 +46,8 @@ class Text::Levenshtein::Damerau {
     #}
 
 
-    sub dld (Str $source is copy, Str $target is copy, Int $max = 0) returns Int is export {
+    sub dld (Str $source is copy, Str $target is copy, Int $max is copy = 0) returns Int is export {
+        $max = $max > 0 ?? $max !! [max] $source.chars, $target.chars;
         my Int $firstLength = $source.chars;
         my Int $secondLength = $target.chars;
         my Int @currentRow;
@@ -89,8 +90,6 @@ class Text::Levenshtein::Damerau {
 
         my Str $lastSecondCh;
         for 1..$secondLength+1 -> Int $i {
-            warn "DEBUG i:$i";
-            warn "DEBUG max:$max";
             my Str $secondCh = $target.substr($i - 1, 1);
             @currentRow[0] = $i;
 
@@ -102,21 +101,16 @@ class Text::Levenshtein::Damerau {
                 $i + $max + 1, 
                 $firstLength;
 
-            warn "DEBUG from:$from";
-            warn "DEBUG to:$to";
+            #warn "DEBUG from:$from";
+            #warn "DEBUG to:$to";
 
             my Str $lastFirstCh;
-            for $from..$to -> Int $j {
-                warn "DEBUG "~$source.perl;
-                warn "DEBUG j:$j";
+            for $from..$to+1 -> Int $j {
+                #warn "DEBUG "~$source.perl;
+                #warn "DEBUG j:$j";
                 my Str $firstCh = $source.substr($j - 1, 1);
 
                 my Int $cost  = $firstCh eq $secondCh ?? 0 !! 1;
-
-                warn @currentRow.perl;
-                warn @previousRow.perl;
-                warn @previousRow.perl;
-
                 my Int $value = [min] 
                     @currentRow\[$j - 1] + 1, 
                     @previousRow[$j    ] + 1;
