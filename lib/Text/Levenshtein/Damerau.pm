@@ -2,14 +2,14 @@ use v6;
 
 # TODO:
 # Perl6-ify the code
-# Try to implement $max_distance for damerau levenshtein
+# Try to implement $max for damerau levenshtein
 # Switch levenshtein to 2 vector version?
 # More helpers, like ordering the %.results, transposition => 0 (use &ld)
 
 class Text::Levenshtein::Damerau {
     has @.targets;
     has @.sources;
-    has $.max_distance;  # undef = no max distance
+    has $.max;  # Nil/-1 = no max distance
     has $.results_limit; # Only return X closest results
     has %.results       is rw;
     has $.best_index     is rw;
@@ -17,7 +17,7 @@ class Text::Levenshtein::Damerau {
     has $.best_target    is rw;
 
 
-    submethod BUILD(:@!sources, :@!targets, Int :$!max_distance = 0) {
+    submethod BUILD(:@!sources, :@!targets, Int :$!max = 0) {
         # nothing to do here, the signature binding
         # does all the work for us.
     }
@@ -26,7 +26,7 @@ class Text::Levenshtein::Damerau {
         await do for @.sources -> $source {
             await do for @.targets -> $target {
                 start {
-                    my $distance       = dld( $source, $target, $.max_distance );
+                    my $distance       = dld( $source, $target, $.max );
                     %.results{$target} = { distance => $distance };
         
                     if !$.best_distance.defined || $.best_distance > $distance {
@@ -132,18 +132,18 @@ class Text::Levenshtein::Damerau {
     }
 
 
-    sub ld ( Str $source, Str $target, Int $max_distance = 0 ) returns Num is export {
+    sub ld ( Str $source, Str $target, Int $max = 0 ) returns Num is export {
         my Int $source_length = $source.chars;
         my Int $target_length = $target.chars;
-        #return Inf if ($max_distance !== 0 && abs($source_length - $target_length) > $max_distance);
+        #return Inf if ($max !== 0 && abs($source_length - $target_length) > $max);
         return ($source_length??$source_length.Num!!$target_length.Num) if (!$target_length || !$source_length);
 
         my Array @scores = ([0..$target_length],[]);
         my Int $large_value;
 
         # some cruft that will be refactored
-        if $max_distance > 0 {
-            $large_value = $max_distance + 1;
+        if $max > 0 {
+            $large_value = $max + 1;
         }
         else {
             if $target_length > $source_length {
@@ -163,12 +163,12 @@ class Text::Levenshtein::Damerau {
             my Int $min_target = 1;
             my Int $max_target = $target_length;
 
-            if $max_distance > 0 {
-                if $source_index > $max_distance {
-                    $min_target = $source_index - $max_distance;
+            if $max > 0 {
+                if $source_index > $max {
+                    $min_target = $source_index - $max;
                 }
-                if $target_length > $max_distance + $source_index {
-                    $max_target = $max_distance + $source_index;
+                if $target_length > $max + $source_index {
+                    $max_target = $max + $source_index;
                 }
             }
 
@@ -214,14 +214,14 @@ class Text::Levenshtein::Damerau {
                 }
             }
 
-            # doesnt work when the expected score == max_distance
-            #if $max_distance !== 0 && $col_min > $max_distance {
+            # doesnt work when the expected score == max
+            #if $max !== 0 && $col_min > $max {
             #    return Inf;
             #}
         }
 
         
         my $score = @scores[$source_length % 2][$target_length].Num;
-        return ($score > $max_distance && $max_distance !== 0)??Inf!!$score;
+        return ($score > $max && $max !== 0)??Inf!!$score;
     }
 }
