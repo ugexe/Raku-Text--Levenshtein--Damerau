@@ -1,10 +1,5 @@
 use v6;
 
-# TODO:
-# Perl6-ify the code
-# Try to implement $max for damerau levenshtein
-# Switch levenshtein to 2 vector version?
-# More helpers, like ordering the %.results, transposition => 0 (use &ld)
 
 class Text::Levenshtein::Damerau {
     has @.targets;
@@ -17,7 +12,7 @@ class Text::Levenshtein::Damerau {
     has $.best_target    is rw;
 
 
-    submethod BUILD(:@!sources, :@!targets, Int :$!max = 0) {
+    submethod BUILD(:@!sources, :@!targets, Int :$!max) {
         # nothing to do here, the signature binding
         # does all the work for us.
     }
@@ -28,7 +23,7 @@ class Text::Levenshtein::Damerau {
                 start {
                     my $distance       = dld( $source, $target, $.max );
                     %.results{$target} = { distance => $distance };
-        
+
                     if !$.best_distance.defined || $.best_distance > $distance {
                         $.best_distance = $distance;
                         $.best_target   = $target;
@@ -38,89 +33,52 @@ class Text::Levenshtein::Damerau {
         }
     }
 
-    # Java BUILD?
-    #public DamerauLevensteinMetric(int maxLength) {
-    #        currentRow = new int[maxLength + 1];
-    #        previousRow = new int[maxLength + 1];
-    #        transpositionRow = new int[maxLength + 1];
-    #}
 
+    sub dld (Str $source is copy, Str $target is copy, Int $max?) returns Any is export {
+        my Int $maxd = ($max.defined && $max >= 0) ?? $max !! $source.chars max $target.chars;
+        my Int $sourceLength  = $source.chars;
+        my Int $targetLength = $target.chars;
+        my Int (@currentRow, @previousRow, @transpositionRow);
 
-    sub dld (Str $source is copy, Str $target is copy, Int $max is copy = 0) is export {
-        $max = $max > 0 ?? $max !! [max] $source.chars, $target.chars;
-        my Int $firstLength = $source.chars;
-        my Int $secondLength = $target.chars;
-        my Int @currentRow;
-        my Int @previousRow;
-        my Int @transpositionRow;
-
-        if ($firstLength == 0) {
-            return $secondLength;
-        }
-        elsif ($secondLength == 0) {
-            return $firstLength;
+        # Swap source/target so that $sourceLength always contains the shorter string
+        if ($sourceLength > $targetLength) {
+            ($source,$target)             .= reverse;
+            ($sourceLength,$targetLength) .= reverse;
         }
 
-        if ($firstLength > $secondLength) {
-            my Str $tmp   = $source;
-            $source       = $target;
-            $target       = $tmp;
-            $firstLength  = $secondLength;
-            $secondLength = $target.chars;
-        }
+        return ((!$max.defined || $maxd <= $targetLength)
+            ?? $targetLength !! Nil) if 0 ~~ any($sourceLength|$targetLength);
 
-        if ($max < 0) {
-            $max = $secondLength;
-        }
+        my Int $diff = $targetLength - $sourceLength;
+        return Nil if $max.defined && $diff > $maxd;
+        
+        @previousRow[$_] = $_ for 0..$sourceLength+1;
 
+        my Str $lastTargetCh = '';
+        for 1..$targetLength -> Int $i {
+            my Str $targetCh = $target.substr($i - 1, 1);
+            @currentRow[0]   = $i;
 
-        if ($secondLength - $firstLength > $max) {
-            return Nil;
-            # return $max + 1; or we can this to return Int and not Any for Nil
-        }
+            my Int $start = [max] $i - $maxd - 1, 1;
+            my Int $end   = [min] $i + $maxd + 1, $sourceLength;
 
-        if ($firstLength > @currentRow.elems) {
-            @currentRow       = ();
-            @previousRow      = ();
-            @transpositionRow = ();
-        }
+            my Str $lastSourceCh = '';
+            for $start..$end -> Int $j {
+                my Str $sourceCh = $source.substr($j - 1, 1);
+                my Int $cost     = $sourceCh eq $targetCh ?? 0 !! 1;
 
-        for 0..$firstLength+1 -> Int $init {
-            @previousRow[$init] = $init;
-        }
-
-        my Str $lastSecondCh = '';
-        loop (my Int $i = 1; $i <= $secondLength; $i++) {
-            my Str $secondCh = $target.substr($i - 1, 1);
-            @currentRow[0] = $i;
-
-            my Int $start = [max] 
-                $i - $max - 1, 
-                1;
-
-            my Int $end   = [min] 
-                $i + $max + 1, 
-                $firstLength;
-
-            my Str $lastFirstCh = '';
-            loop (my Int $j = $start; $j <= $end; $j++) {
-                my Str $firstCh = $source.substr($j - 1, 1);
-                my Int $cost  = $firstCh eq $secondCh ?? 0 !! 1;
-                my Int $value = [min] 
+                @currentRow[$j] = [min] 
                     @currentRow\[$j - 1] + 1, 
-                    @previousRow[$j>=@previousRow.elems??*-1!!$j] + 1,
-                    @previousRow[$j - 1] + $cost;
-                if ($firstCh eq $lastSecondCh && $secondCh eq $lastFirstCh) {
-                    $value = [min] 
-                        $value, 
-                        @transpositionRow[$j - 2] + $cost;
-                }
+                    @previousRow[$j >= @previousRow.elems ?? *-1 !! $j] + 1,
+                    @previousRow[$j - 1] + $cost,
+                    ($sourceCh eq $lastTargetCh && $targetCh eq $lastSourceCh)
+                        ?? @transpositionRow[$j - 2] + $cost
+                        !! $maxd;
 
-                @currentRow[$j] = $value;
-                $lastFirstCh    = $firstCh;
+                $lastSourceCh = $sourceCh;
             }
 
-            $lastSecondCh = $secondCh;
+            $lastTargetCh = $targetCh;
 
             my Int @tempRow   = @transpositionRow;
             @transpositionRow = @previousRow;
@@ -128,100 +86,52 @@ class Text::Levenshtein::Damerau {
             @currentRow       = @tempRow;
         }
 
-        return @previousRow[$firstLength] <= $max ?? @previousRow[$firstLength] !! Nil;
+        return (!$max.defined || @previousRow[$sourceLength] <= $maxd) ?? @previousRow[$sourceLength] !! Nil;
     }
 
+    sub ld ( Str $source is copy, Str $target is copy, Int $max?) returns Any is export {
+        my Int $maxd = ($max.defined && $max >= 0) ?? $max !! $source.chars max $target.chars;
+        my Int $sourceLength = $source.chars;
+        my Int $targetLength = $target.chars;
+        my Int (@currentRow, @previousRow);
 
-    sub ld ( Str $source, Str $target, Int $max = 0 ) returns Num is export {
-        my Int $source_length = $source.chars;
-        my Int $target_length = $target.chars;
-        #return Inf if ($max !== 0 && abs($source_length - $target_length) > $max);
-        return ($source_length??$source_length.Num!!$target_length.Num) if (!$target_length || !$source_length);
-
-        my Array @scores = ([0..$target_length],[]);
-        my Int $large_value;
-
-        # some cruft that will be refactored
-        if $max > 0 {
-            $large_value = $max + 1;
-        }
-        else {
-            if $target_length > $source_length {
-                $large_value = $target_length;
-            }
-            else {
-                $large_value = $source_length;
-            }
+        #Swap source/target so that $sourceLength always contains the shorter string
+        if ($sourceLength > $targetLength) {
+            ($source,$target)             .= reverse;
+            ($sourceLength,$targetLength) .= reverse;
         }
 
+        return ((!$max.defined || $maxd <= $targetLength)
+            ?? $targetLength !! Nil) if 0 ~~ any($sourceLength|$targetLength);
 
-        for 1..$source_length+1 -> Int $source_index  {
-            my Int $next;
-            my Int $prev;
-            my Str $source_char = $source.substr($source_index-1,1);
-            my Int $col_min = $large_value;
-            my Int $min_target = 1;
-            my Int $max_target = $target_length;
+        my Int $diff = $targetLength - $sourceLength;
+        return Nil if $max.defined && $diff > $maxd;
 
-            if $max > 0 {
-                if $source_index > $max {
-                    $min_target = $source_index - $max;
-                }
-                if $target_length > $max + $source_index {
-                    $max_target = $max + $source_index;
-                }
+        @previousRow[$_] = $_ for 0..$sourceLength+1;
+
+        for 1..$targetLength -> $i {
+            my Str $targetCh = $target.substr($i - 1, 1);
+            my Int $start = [max] $i - $maxd - 1, 1;
+            my Int $end   = [min] $i + $maxd + 1, $sourceLength;
+            @currentRow[0]   = $i;
+
+            for $start..$end -> $j {
+                my Str $sourceCh = $source.substr($j - 1, 1);
+                @currentRow[$j] = [min] 
+                    @currentRow\[$j - 1] + 1,
+                    @previousRow[$j    ] + 1,
+                    @previousRow[$j - 1] + ($targetCh eq $sourceCh ?? 0 !! 1);
+
+                return Nil if( @currentRow[0] == $j 
+                    && $maxd < (($diff => @currentRow[@currentRow[0]])
+                        ?? ($diff - @currentRow[@currentRow[0]]) 
+                        !! (@currentRow[@currentRow[0]] + $diff))
+                );
             }
 
-            $next = $source_index % 2;
-
-            if ($next == 1) {
-                $prev = 0;
-            }
-            else {
-                $prev = 1;
-            }
-
-            @scores[$next][0] = $source_index;
-
-            for 1..$target_length+1 -> Int $target_index  {
-                if ($target_index < $min_target || $target_index > $max_target) {
-                    @scores[$next][$target_index] = $large_value;
-                }
-                else {
-                    if $source_char eq $target.substr($target_index - 1, 1) {
-                        @scores[$next][$target_index] = @scores[$prev][$target_index - 1];
-                    }
-                    else {
-                        my Int $delete     = @scores[$prev][$target_index]     + 1; #[% delete_cost %];
-                        my Int $insert     = @scores[$next][$target_index - 1] + 1; #[% insert_cost %];
-                        my Int $substitute = @scores[$prev][$target_index - 1] + 1; #[% substitute_cost %];
-                        my Int $minimum    = $delete;
-
-                        if ($insert < $minimum) {
-                            $minimum = $insert;
-                        }
-                        if ($substitute < $minimum) {
-                            $minimum = $substitute;
-                        }
-
-                        @scores[$next][$target_index] = $minimum;
-                    }
-                }
-
-
-                if @scores[$next][$target_index] < $col_min {
-                    $col_min = @scores[$next][$target_index];
-                }
-            }
-
-            # doesnt work when the expected score == max
-            #if $max !== 0 && $col_min > $max {
-            #    return Inf;
-            #}
+            @previousRow[$_] = @currentRow[$_] for 0..@currentRow.end;
         }
 
-        
-        my $score = @scores[$source_length % 2][$target_length].Num;
-        return ($score > $max && $max !== 0)??Inf!!$score;
+        return (!$max.defined || @currentRow[*-1] <= $maxd) ?? @currentRow[*-1] !! Nil;
     }
 }
