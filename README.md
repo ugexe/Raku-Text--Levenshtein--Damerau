@@ -22,7 +22,7 @@ Returns the true Levenshtein or Damerau Levenshtein edit distance of strings wit
     my $name_mispelling = 'Jonh';
 
     my $dl = Text::Levenshtein::Damerau.new(
-        max_distance    => 0,       # default 
+        max             => 0,       # default 
         targets         => @names,  # required
     );
 
@@ -32,21 +32,19 @@ Returns the true Levenshtein or Damerau Levenshtein edit distance of strings wit
     my %results = $dl.results;
 
     # Display each string and is distance
-    say "INDEX\t\tDISTANCE\tSTRING";
+    say "DISTANCE\tSTRING";
     for %results.kv -> $string,$info {
-        say "{$info<index>}\t\t{$info<distance>}\t\t$string\n";
+        say "{{$info<distance>}\t\t$string\n";
     }
 
     # More info
     say "----------------------------";
     say "\$dl.best_distance:        {$dl.best_distance}";
-    say "\$dl.best_index:           {$dl.best_index}";
     say "-";
     say "\$dl.targets:              {~$dl.targets}";
     say "\$dl.best_target:          {$dl.best_target}";
     say "-";
     say "\@names:                   {~@names}";
-    say "\@names[\$dl.best_index]   {@names[$dl.best_index]}";
 
 # METHODS
 
@@ -56,9 +54,9 @@ Damerau Levenshtein Distance (Levenshtein Distance including transpositions)
 
 Arguments: source string and target string.
 
-- _OPTIONAL 3rd argument_ int $max distance. 0 = unlimited. Default = 0.
+- _OPTIONAL 3rd argument_ int $max distance. Nil/-1 = unlimited. Default = Nil. 
 
-Returns: int that represents the edit distance between the two argument. Stops calculations and returns Inf if max distance is set and reached.
+Returns: int that represents the edit distance between the two argument. Stops calculations and returns Inf if max distance is set and reached if possible.
 
 
     use Text::Levenshtein::Damerau;
@@ -67,7 +65,7 @@ Returns: int that represents the edit distance between the two argument. Stops c
 
     # Max edit distance of 1
     say dld('AABBCC','AABCBCD',1); # distance is 2
-    # prints Inf
+    # prints Nil
 
 ## ld
 
@@ -75,9 +73,9 @@ Levenshtein Distance (no transpositions)
 
 Arguments: source string and target string.
 
-- _OPTIONAL 3rd argument_ int $max distance. 0 = unlimited. Default = 0. 
+- _OPTIONAL 3rd argument_ int $max distance. Nil/-1 = unlimited. Default = Nil. 
 
-Returns: int that represents the edit distance between the two argument. Stops calculations and returns Inf if max distance is set and reached.
+Returns: int that represents the edit distance between the two argument. Stops calculations and returns Inf if max distance is set and reached if possible.
 
     use Text::Levenshtein::Damerau;
     say ld('AABBCC','AABCBCD');
@@ -85,7 +83,7 @@ Returns: int that represents the edit distance between the two argument. Stops c
 
     # Max edit distance of 1
     say ld('AABBCC','AABCBCD',1); # distance is 3
-    # prints Inf
+    # prints Nill
 
 # BUGS
 

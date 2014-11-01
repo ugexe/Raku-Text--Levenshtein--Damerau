@@ -1,10 +1,5 @@
 use v6;
 
-# TODO:
-# Perl6-ify the code
-# Try to implement $max for damerau levenshtein
-# Switch levenshtein to 2 vector version?
-# More helpers, like ordering the %.results, transposition => 0 (use &ld)
 
 class Text::Levenshtein::Damerau {
     has @.targets;
@@ -17,7 +12,7 @@ class Text::Levenshtein::Damerau {
     has $.best_target    is rw;
 
 
-    submethod BUILD(:@!sources, :@!targets, Int :$!max = 0) {
+    submethod BUILD(:@!sources, :@!targets, Int :$!max) {
         # nothing to do here, the signature binding
         # does all the work for us.
     }
@@ -28,7 +23,7 @@ class Text::Levenshtein::Damerau {
                 start {
                     my $distance       = dld( $source, $target, $.max );
                     %.results{$target} = { distance => $distance };
-        
+
                     if !$.best_distance.defined || $.best_distance > $distance {
                         $.best_distance = $distance;
                         $.best_target   = $target;
@@ -39,13 +34,11 @@ class Text::Levenshtein::Damerau {
     }
 
 
-    sub dld (Str $source is copy, Str $target is copy, Int $max is copy = 0) is export {
-        $max = $max > 0 ?? $max !! $source.chars max $target.chars;
+    sub dld (Str $source is copy, Str $target is copy, Int $max?) returns Any is export {
+        my Int $maxd = ($max.defined && $max >= 0) ?? $max !! $source.chars max $target.chars;
         my Int $sourceLength  = $source.chars;
         my Int $targetLength = $target.chars;
         my Int (@currentRow, @previousRow, @transpositionRow);
-
-        return [max] $sourceLength,$targetLength if 0 ~~ any($sourceLength|$targetLength);
 
         # Swap source/target so that $sourceLength always contains the shorter string
         if ($sourceLength > $targetLength) {
@@ -53,10 +46,11 @@ class Text::Levenshtein::Damerau {
             ($sourceLength,$targetLength) .= reverse;
         }
 
-        $max = $targetLength unless $max >= 0;
-        return Nil if $targetLength - $sourceLength > $max;
-        @currentRow      = @previousRow = @transpositionRow = ()
-            if $sourceLength > @currentRow.elems;
+        return ((!$max.defined || $maxd <= $targetLength)
+            ?? $targetLength !! Nil) if 0 ~~ any($sourceLength|$targetLength);
+
+        my Int $diff = $targetLength - $sourceLength;
+        return Nil if $max.defined && $diff > $maxd;
         
         @previousRow[$_] = $_ for 0..$sourceLength+1;
 
@@ -65,8 +59,8 @@ class Text::Levenshtein::Damerau {
             my Str $targetCh = $target.substr($i - 1, 1);
             @currentRow[0]   = $i;
 
-            my Int $start = [max] $i - $max - 1, 1;
-            my Int $end   = [min] $i + $max + 1, $sourceLength;
+            my Int $start = [max] $i - $maxd - 1, 1;
+            my Int $end   = [min] $i + $maxd + 1, $sourceLength;
 
             my Str $lastSourceCh = '';
             for $start..$end -> Int $j {
@@ -79,7 +73,7 @@ class Text::Levenshtein::Damerau {
                     @previousRow[$j - 1] + $cost,
                     ($sourceCh eq $lastTargetCh && $targetCh eq $lastSourceCh)
                         ?? @transpositionRow[$j - 2] + $cost
-                        !! $max;;
+                        !! $maxd;
 
                 $lastSourceCh = $sourceCh;
             }
@@ -92,18 +86,14 @@ class Text::Levenshtein::Damerau {
             @currentRow       = @tempRow;
         }
 
-        return @previousRow[$sourceLength] <= $max ?? @previousRow[$sourceLength] !! Nil;
+        return (!$max.defined || @previousRow[$sourceLength] <= $maxd) ?? @previousRow[$sourceLength] !! Nil;
     }
 
-    sub ld ( Str $source is copy, Str $target is copy, Int $max is copy = 0 ) returns Any is export {
-        $max = $max > 0 ?? $max !! $source.chars max $target.chars;
+    sub ld ( Str $source is copy, Str $target is copy, Int $max?) returns Any is export {
+        my Int $maxd = ($max.defined && $max >= 0) ?? $max !! $source.chars max $target.chars;
         my Int $sourceLength = $source.chars;
         my Int $targetLength = $target.chars;
         my Int (@currentRow, @previousRow);
-        my Int $diff = ($sourceLength max $targetLength) - ($sourceLength min $targetLength);
-
-        return [max] $sourceLength,$targetLength if 0 ~~ any($sourceLength|$targetLength);
-        $max = $targetLength unless $max >= 0;
 
         #Swap source/target so that $sourceLength always contains the shorter string
         if ($sourceLength > $targetLength) {
@@ -111,38 +101,37 @@ class Text::Levenshtein::Damerau {
             ($sourceLength,$targetLength) .= reverse;
         }
 
-        return Nil if $diff > $max;
-        @currentRow = @previousRow= () if $sourceLength > @currentRow.elems;
+        return ((!$max.defined || $maxd <= $targetLength)
+            ?? $targetLength !! Nil) if 0 ~~ any($sourceLength|$targetLength);
+
+        my Int $diff = $targetLength - $sourceLength;
+        return Nil if $max.defined && $diff > $maxd;
 
         @previousRow[$_] = $_ for 0..$sourceLength+1;
 
-        for 1..$targetLength+1 -> $i {
+        for 1..$targetLength -> $i {
             my Str $targetCh = $target.substr($i - 1, 1);
-            @currentRow[0]   = $i + 1;
-
-            my Int $start = [max] $i - $max - 1, 1;
-            my Int $end   = [min] $i + $max + 1, $sourceLength;
+            my Int $start = [max] $i - $maxd - 1, 1;
+            my Int $end   = [min] $i + $maxd + 1, $sourceLength;
+            @currentRow[0]   = $i;
 
             for $start..$end -> $j {
                 my Str $sourceCh = $source.substr($j - 1, 1);
-
                 @currentRow[$j] = [min] 
                     @currentRow\[$j - 1] + 1,
                     @previousRow[$j    ] + 1,
                     @previousRow[$j - 1] + ($targetCh eq $sourceCh ?? 0 !! 1);
 
-                return Nil if( @currentRow[0] == $j && $max < 
-                    (($targetLength - $sourceLength > @currentRow[@currentRow[0]])
-                    ?? ($diff - @currentRow[@currentRow[0]]) 
-                    !! (@currentRow[@currentRow[0]] + $diff))
+                return Nil if( @currentRow[0] == $j 
+                    && $maxd < (($diff => @currentRow[@currentRow[0]])
+                        ?? ($diff - @currentRow[@currentRow[0]]) 
+                        !! (@currentRow[@currentRow[0]] + $diff))
                 );
             }
 
-            if $i < $targetLength {
-                @previousRow[$_] = @currentRow[$_] for 0..$targetLength+1;
-            }
+            @previousRow[$_] = @currentRow[$_] for 0..@currentRow.end;
         }
 
-        return @currentRow[*-1] <= $max ?? @currentRow[*-1] !! Nil;
+        return (!$max.defined || @currentRow[*-1] <= $maxd) ?? @currentRow[*-1] !! Nil;
     }
 }

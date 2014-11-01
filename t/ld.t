@@ -30,7 +30,7 @@ is( ld("cow","cat",2),              2,  "(max distance) Correct ld cow cat");
 is( ld("cat","moocow",5),           5,  "(max distance) Correct ld cat moocow");
 is( ld("cat","cowmoo",4),         Nil,  "(max distance) Correct ld cat cowmoo");
 is( ld("sebastian","sebastien",4),  1,  "(max distance) Correct ld sebastian sebastien");
-is( ld("more","cowbell",0),         5,  "(max distance) Correct ld more cowbell");
+is( ld("more","cowbell",0),       Nil,  "(max distance) Correct ld more cowbell");
 is( ld("a","xxxxxxxx",5),         Nil,  "(max distance) length difference shortcut");
 
 # some extra maxDistance tests
