@@ -1,11 +1,11 @@
 use v6;
-module Text::Levenshtein::Damerau;
+class Text::Levenshtein::Damerau;
 
-has @.targets;
-has @.sources;
-has $.max;  # Nil/-1 = no max distance
-has $.results_limit; # Only return X closest results
-has %.results       is rw;
+has @.targets        is rw;
+has @.sources        is rw;
+has $.max            is rw;  # Nil/-1 = no max distance
+has $.results_limit  is rw; # Only return X closest results
+has %.results        is rw;
 has $.best_index     is rw;
 has $.best_distance  is rw;
 has $.best_target    is rw;
@@ -33,7 +33,7 @@ method get_results {
 }
 
 
-sub dld (Str $source is copy, Str $target is copy, Int $max?) returns Any is export {
+sub dld (Str $source is copy, Str $target is copy, Int $max?) is export {
     my Int $maxd = ($max.defined && $max >= 0) ?? $max !! $source.chars max $target.chars;
     my Int $sourceLength  = $source.chars;
     my Int $targetLength = $target.chars;
@@ -89,7 +89,7 @@ sub dld (Str $source is copy, Str $target is copy, Int $max?) returns Any is exp
     return (!$max.defined || @previousRow[$sourceLength] <= $maxd) ?? @previousRow[$sourceLength] !! Nil;
 }
 
-sub ld ( Str $source is copy, Str $target is copy, Int $max?) returns Any is export {
+sub ld ( Str $source is copy, Str $target is copy, Int $max?) is export {
     my Int $maxd = ($max.defined && $max >= 0) ?? $max !! $source.chars max $target.chars;
     my Int $sourceLength = $source.chars;
     my Int $targetLength = $target.chars;

@@ -1,30 +1,26 @@
 use v6;
-use Text::Levenshtein::Damerau;
+use Text::Levenshtein::Damerau; 
+use Text::Levenshtein;
 use Benchmark;
 
-my Int $x    = 5; # string multiplier
-my Str $str1 = "four"  x $x;
-my Str $str2 = "fuoru" x $x;
-
-# Note speed advantage of Text::Levenshtein::Damerau::ld 
-# over Text::Levenshtein::distance after running :)
-
+# benchmark.p6 <number of runs>
 sub MAIN(Int $runs = 10) {
-	say "start\t\tend\t\tdiff\tavg";
-	say "------------------------------------------------";
-	{
-		say <# Text::Levenshtein::Damerau::dld($str1, $str2)>;
-		my Int @stats = timethis($runs,  sub { dld($str1, $str2); }); 
-		say @stats.join("\t");
-	}
-	say "------------------------------------------------";
-	{
-		say <# Text::Levenshtein::Damerau::ld($str1, $str2)>;
-		my Int @stats = timethis($runs, sub { ld($str1, $str2); }); 
-		say @stats.join("\t");
-	}
-	say "------------------------------------------------";
-}
-sub USAGE() {
-    say "Usage: benchmark.p6 <number of runs>";
+    for 1,100,1000,10000,100000 -> Int $multiplier {
+        my Str $str1 = "four" x $multiplier;
+        my Str $str2 = "fuoru" x $multiplier;
+        say "Testing lengths:\n\$str1 = {$str1.chars}\n\$str1 = {$str2.chars}";
+
+        my %results = timethese($runs, {
+            'dld     ' => sub { Text::Levenshtein::Damerau::{"&dld($str1,$str2)"} },
+            'ld      ' => sub { Text::Levenshtein::Damerau::{"&ld($str1,$str2)"}  },
+            'distance' => sub { Text::Levenshtein::{"&distance($str1,$str2)"}     },
+        });
+
+        say ('func','start','end','diff','avg').join("\t\t");
+        for %results.kv -> $description, @result {
+            say ($description,@result).join("\t");
+        }
+
+        say "------------------------------------------------";
+    }
 }
