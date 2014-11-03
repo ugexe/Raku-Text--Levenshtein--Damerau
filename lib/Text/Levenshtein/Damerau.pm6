@@ -1,5 +1,5 @@
 use v6;
-module Text::Levenshtein::Damerau;
+class Text::Levenshtein::Damerau;
 
 has @.targets;
 has @.sources;
