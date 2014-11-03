@@ -1,32 +1,30 @@
 use v6;
 class Text::Levenshtein::Damerau;
 
-has @.targets        is rw;
-has @.sources        is rw;
-has $.max            is rw;  # Nil/-1 = no max distance
-has $.results_limit  is rw; # Only return X closest results
-has %.results        is rw;
-has $.best_index     is rw;
-has $.best_distance  is rw;
-has $.best_target    is rw;
+has Str  @.targets        is rw;
+has Str  @.sources        is rw;
+has Int  $.max            is rw;  # Nil/-1 = no max distance
+has Int  $.results_limit  is rw;  # Only return X closest results
+has Hash %.results        is rw;
+has Any  $.best_distance  is rw;
+has Str  $.best_target    is rw;
 
 
-submethod BUILD(:@!sources, :@!targets, Int :$!max) {
+submethod BUILD(:@!sources, :@!targets, Int :$!max, :$!best_distance) {
     # nothing to do here, the signature binding
     # does all the work for us.
+    $!best_distance = Inf;
 }
 
 method get_results {    
-    await do for @.sources -> $source {
-        await do for @.targets -> $target {
-            start {
-                my $distance       = dld( $source, $target, $.max );
-                %.results{$target} = { distance => $distance };
+    for @.sources -> $source {
+        for @.targets -> $target {
+            my $distance       = dld( $source, $target, $.max );
+            %.results{$target} = { distance => $distance };
 
-                if !$.best_distance.defined || $.best_distance > $distance {
-                    $.best_distance = $distance;
-                    $.best_target   = $target;
-                }
+            if $.best_distance > $distance {
+                $.best_distance = $distance;
+                $.best_target   = $target;
             }
         }
     }
