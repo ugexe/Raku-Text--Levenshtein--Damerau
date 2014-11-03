@@ -1,6 +1,6 @@
 # NAME
 
-Text::Levenshtein::Damerau:: - Levenshtein and Damerau Levenshtein edit distances.
+Text::Levenshtein::Damerau - Levenshtein and Damerau Levenshtein edit distances.
 
 # SYNOPSIS
 
@@ -82,8 +82,9 @@ Returns: int that represents the edit distance between the two argument. Stops c
     # prints 3
 
     # Max edit distance of 1
+    # Uses regular Levenshtein distance (no transpositions)
     say ld('AABBCC','AABCBCD',1); # distance is 3
-    # prints Nill
+    # prints Nil
 
 # BUGS
 
