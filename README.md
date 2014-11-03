@@ -1,6 +1,6 @@
 # NAME
 
-Text::Levenshtein::Damerau:: - Levenshtein and Damerau Levenshtein edit distances.
+Text::Levenshtein::Damerau - Levenshtein and Damerau Levenshtein edit distances.
 
 # SYNOPSIS
 
