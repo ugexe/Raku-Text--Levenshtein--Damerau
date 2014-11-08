@@ -1,6 +1,6 @@
 use v6;
 use Test;
-plan 34;
+plan 28;
 use Text::Levenshtein::Damerau;
 
 
