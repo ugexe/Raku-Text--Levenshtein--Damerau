@@ -83,7 +83,7 @@ sub dld (Str $source is copy, Str $target is copy, Int $max?) is export {
         @currentRow       = @tempRow;
     }
 
-    return (!$max.defined || @transpositionRow[$sourceLength] <= $maxd) ?? @transpositionRow[$sourceLength] !! Nil;
+    return (!$max.defined || @previousRow[$sourceLength] <= $maxd) ?? @previousRow[$sourceLength] !! Nil;
 }
 
 sub ld ( Str $source is copy, Str $target is copy, Int $max?) is export {
