@@ -13,7 +13,6 @@ has Str  $.best_target    is rw;
 submethod BUILD(:@!sources, :@!targets, Int :$!max, :$!best_distance) {
     # nothing to do here, the signature binding
     # does all the work for us.
-    $!best_distance = Inf;
 }
 
 method get_results {    
@@ -22,7 +21,7 @@ method get_results {
             my $distance       = dld( $source, $target, $.max );
             %.results{$target} = { distance => $distance };
 
-            if $.best_distance > $distance {
+            if !$.best_distance.defined || $.best_distance > $distance {
                 $.best_distance = $distance;
                 $.best_target   = $target;
             }
