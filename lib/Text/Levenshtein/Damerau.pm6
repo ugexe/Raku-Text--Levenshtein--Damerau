@@ -32,7 +32,7 @@ method get_results {
 
 sub dld (Str $source is copy, Str $target is copy, Int $max?) is export {
     my Int $maxd = ($max.defined && $max >= 0) ?? $max !! $source.chars max $target.chars;
-    my Int $sourceLength  = $source.chars;
+    my Int $sourceLength = $source.chars;
     my Int $targetLength = $target.chars;
     my Int (@currentRow, @previousRow, @transpositionRow);
 
@@ -70,7 +70,7 @@ sub dld (Str $source is copy, Str $target is copy, Int $max?) is export {
                 @previousRow[$j - 1] + $cost,
                 ($sourceCh eq $lastTargetCh && $targetCh eq $lastSourceCh)
                     ?? @transpositionRow[$j - 2] + $cost
-                    !! $maxd;
+                    !! $maxd + 1;
 
             $lastSourceCh = $sourceCh;
         }

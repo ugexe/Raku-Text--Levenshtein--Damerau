@@ -1,6 +1,6 @@
 use v6;
 use Test;
-plan 45;
+plan 42;
 use Text::Levenshtein::Damerau;
 
 
@@ -51,12 +51,7 @@ is( ld('ⓕⓞⓤⓡ','ⓕⓞⓤⓡⓣⓗ'),                    2,  'deletion (u
 is( ld('ⓕⓞⓤⓡ','ⓕⓤⓞⓡ'),                      2,  '(no) transposition (utf8)');
 is( ld('ⓕⓞⓤⓡ','ⓕⓧⓧⓡ'),                      2,  'substitution (utf8)');
 
-
 # test larger strings
 is( ld('four' x 20, 'fuor' x 20),          40,  'lengths of 100');
 is( ld('four' x 20, 'fuor' x 20, 39),     Nil,  'lengths of 100 exceeding max value');
 is( ld('four' x 20, 'fuor' x 20, 41),      40,  'lengths of 100 under max value');
-
-is( ld('four' x 100, 'fuor' x 100),       200,  'lengths of 400');
-is( ld('four' x 100, 'fuor' x 100, 199),  Nil,  'lengths of 400 exceeding max value');
-is( ld('four' x 100, 'fuor' x 100, 201),  200,  'lengths of 400 under max value');
