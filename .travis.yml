@@ -23,6 +23,6 @@ install:
 before_script:
     - panda list --installed --verbose
 script:
-    - prove -vsj$(test-jobs) -e perl6 -Ilib $(test-files)
+    - prove -v -s -j$(test-jobs) -e perl6 -Ilib $(test-files)
 after_success:
 #   do coveralls.io testing
