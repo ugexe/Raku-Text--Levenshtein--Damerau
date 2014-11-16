@@ -10,11 +10,6 @@ has Any  $.best_distance  is rw;
 has Str  $.best_target    is rw;
 
 
-submethod BUILD(:@!sources, :@!targets, Int :$!max, :$!best_distance) {
-    # nothing to do here, the signature binding
-    # does all the work for us.
-}
-
 method get_results {    
     for @.sources -> $source {
         for @.targets -> $target {
@@ -68,9 +63,9 @@ sub dld (Str $source is copy, Str $target is copy, Int $max?) is export {
                 @currentRow\[$j - 1] + 1, 
                 @previousRow[$j >= @previousRow.elems ?? *-1 !! $j] + 1,
                 @previousRow[$j - 1] + $cost,
-                ($sourceCh eq $lastTargetCh && $targetCh eq $lastSourceCh)
-                    ?? @transpositionRow[$j - 2] + $cost
-                    !! $maxd + 1;
+                    ($sourceCh eq $lastTargetCh && $targetCh eq $lastSourceCh)
+                        ?? @transpositionRow[$j - 2] + $cost
+                        !! $maxd + 1;
 
             $lastSourceCh = $sourceCh;
         }
@@ -85,6 +80,7 @@ sub dld (Str $source is copy, Str $target is copy, Int $max?) is export {
 
     return (!$max.defined || @previousRow[$sourceLength] <= $maxd) ?? @previousRow[$sourceLength] !! Nil;
 }
+
 
 sub ld ( Str $source is copy, Str $target is copy, Int $max?) is export {
     my Int $maxd = ($max.defined && $max >= 0) ?? $max !! $source.chars max $target.chars;
