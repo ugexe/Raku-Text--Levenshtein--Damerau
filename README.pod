@@ -58,9 +58,9 @@ Returns the true Levenshtein or Damerau Levenshtein edit distance of strings wit
 
 Damerau Levenshtein Distance (Levenshtein Distance including transpositions)
 
-Arguments: source string and target string.
+Arguments: $source, $target, $max?
 
-I<OPTIONAL 3rd argument>: int $max distance. Int/-1 = unlimited. Default = Int 
+I<$max distance. Int/-1 = unlimited. Default = Int>
 
 Returns: int that represents the edit distance between the two argument. Stops calculations and returns Int if max distance is set and reached if possible.
 
@@ -77,9 +77,9 @@ Returns: int that represents the edit distance between the two argument. Stops c
 
 Levenshtein Distance (no transpositions)
 
-Arguments: source string and target string.
+Arguments: $source, $target, $max?
 
-I<OPTIONAL 3rd argument>: Int $max distance. Int/-1 = unlimited. Default = Int 
+I<$max distance. Int/-1 = unlimited. Default = Int>
 
 Returns: Int that represents edit distance between the two argument. Stops calculations and returns Int if max distance is set and reached if possible.
 
@@ -91,6 +91,34 @@ Returns: Int that represents edit distance between the two argument. Stops calcu
     # Uses regular Levenshtein distance (no transpositions)
     say ld('AABBCC','AABCBCD',1); # distance is 3
     # prints Int
+
+=back
+
+=head2 Methods
+
+=over 8
+
+=item * C<new>
+
+Damerau Levenshtein Distance (Levenshtein Distance including transpositions)
+
+Arguments: \@sources, \@targets, $max?
+
+I<$max distance. Int/-1 = unlimited. Default = Int>
+
+Create a new object. For now, this is so you may call C<get_results> on it.
+
+=item * C<get_results>
+
+Generates %results and sets the following attributes:
+
+    $.best_distance
+    $.best_target
+    $.best_source if @.sources.elems > 1
+    %.results
+    # %results{$source}{$target} = $distance_result
+
+Returns: %.results
 
 =back
 
