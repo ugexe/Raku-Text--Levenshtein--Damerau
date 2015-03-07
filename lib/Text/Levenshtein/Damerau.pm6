@@ -10,18 +10,30 @@ has Int  $.best_distance  is rw;
 has Str  $.best_target    is rw;
 has Str  $.best_source    is rw;
 
-method get_results {    
+method get_results {
+    my %results;
+    my @working;
+
     for @.sources -> $source {
         for @.targets -> $target {
-            my $distance = dld( $source, $target, $.max );
-            %.results{$source}{$target} = $distance;
-            if !$.best_distance.defined || ($.best_distance > $distance) {
-                $.best_distance = $distance;
+            @working.push(start { %results{$source}{$target} = dld($source, $target) });
+            await Promise.anyof(@working);
+        }
+    }
+    await Promise.allof(@working);
+
+    for %results.kv -> $source, $targets {
+        for $targets.kv -> $target, $distance {
+            if !$.best_distance || $.best_distance > $distance {
                 $.best_target   = $target;
+                $.best_distance = $distance;
                 $.best_source   = $source if @.sources.elems > 1;
             }
         }
     }
+
+    %.results = %results;
+    return %.results;
 }
 
 

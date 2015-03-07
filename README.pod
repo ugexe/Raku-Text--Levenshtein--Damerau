@@ -28,17 +28,17 @@ Returns the true Levenshtein or Damerau Levenshtein edit distance of strings wit
     my $dl = Text::Levenshtein::Damerau.new(
         max             => 0,       # default 
         targets         => @names,  # required
+        sources         => [$name_mispelling]
     );
 
     say "Lets search for a 'John' but mistyped...";
-    $dl.get_results(source => $name_mispelling);
+    my %results =  $dl.get_results;
 
-    my %results = $dl.results;
-
-    # Display each string and is distance
-    say "DISTANCE\tSTRING";
-    for %results.kv -> $string,$info {
-        say "{{$info<distance>}\t\t$string\n";
+    # Display each source, target, and the distance
+    for %results.kv -> $source, $targets {
+        for $targets.kv -> $target, $dld {
+            say "source:$source\ttarget:$target\tdld:" ~ ($dld // "<max exceeded>");
+        }
     }
 
     # More info
