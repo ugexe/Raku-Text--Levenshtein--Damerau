@@ -56,7 +56,7 @@ sub dld (Str $source is copy, Str $target is copy, Int $max? is copy) is export 
 
     my Str $lastTargetCh = '';
     for 1..$targetLength -> Int $i {
-        my Str $targetCh = $target.subStr($i - 1, 1);
+        my Str $targetCh = $target.substr($i - 1, 1);
         @currentRow[0]   = $i;
 
         my Int $start = [max] $i - $max - 1, 1;
@@ -64,7 +64,7 @@ sub dld (Str $source is copy, Str $target is copy, Int $max? is copy) is export 
 
         my Str $lastSourceCh = '';
         for $start..$end -> Int $j {
-            my Str $sourceCh = $source.subStr($j - 1, 1);
+            my Str $sourceCh = $source.substr($j - 1, 1);
             my Int $cost     = $sourceCh eq $targetCh ?? 0 !! 1;
 
             @currentRow[$j] = [min] 
@@ -110,13 +110,13 @@ sub ld ( Str $source is copy, Str $target is copy, Int $max? is copy) is export 
     @previousRow[$_] = $_ for 0..$sourceLength+1;
 
     for 1..$targetLength -> $i {
-        my Str $targetCh = $target.subStr($i - 1, 1);
+        my Str $targetCh = $target.substr($i - 1, 1);
         my Int $start = [max] $i - $max - 1, 1;
         my Int $end   = [min] $i + $max + 1, $sourceLength;
         @currentRow[0]   = $i;
 
         for $start..$end -> $j {
-            my Str $sourceCh = $source.subStr($j - 1, 1);
+            my Str $sourceCh = $source.substr($j - 1, 1);
             @currentRow[$j] = [min] 
                 @currentRow\[$j - 1] + 1,
                 @previousRow[$j    ] + 1,
