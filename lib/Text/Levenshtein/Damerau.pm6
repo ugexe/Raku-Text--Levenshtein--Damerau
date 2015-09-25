@@ -33,11 +33,11 @@ method get_results {
 }
 
 
-sub dld (Str $source is copy, Str $target is copy, int $max? is copy) is export {
+sub dld (Str $source is copy, Str $target is copy, Int $max? is copy) is export {
     my int $sourceLength = $source.chars;
     my int $targetLength = $target.chars;
     my int (@currentRow, @previousRow, @transpositionRow);
-    $max = $sourceLength max $targetLength unless $max;
+    $max ||= $sourceLength max $targetLength;
 
     # Swap source/target so that $sourceLength always contains the shorter String
     if ($sourceLength > $targetLength) {
@@ -86,12 +86,11 @@ sub dld (Str $source is copy, Str $target is copy, int $max? is copy) is export 
     return @previousRow[$sourceLength] <= $max ?? @previousRow[$sourceLength] !! Int;
 }
 
-
-sub ld ( Str $source is copy, Str $target is copy, int $max? is copy) is export {
+sub ld (Str $source is copy, Str $target is copy, Int $max? is copy) is export {
     my int $sourceLength = $source.chars;
     my int $targetLength = $target.chars;
     my int (@currentRow, @previousRow);
-    $max = $source.chars max $target.chars unless $max;
+    $max ||= $source.chars max $target.chars;
 
     #Swap source/target so that $sourceLength always contains the shorter String
     if ($sourceLength > $targetLength) {
@@ -105,20 +104,20 @@ sub ld ( Str $source is copy, Str $target is copy, int $max? is copy) is export 
 
     @previousRow[$_] = $_ for 0..$sourceLength+1;
 
-    for 1..$targetLength -> $i {
+    for 1..$targetLength -> int $i {
         my Str $targetCh = $target.substr($i - 1, 1);
         my int $start = [max] $i - $max - 1, 1;
         my int $end   = [min] $i + $max + 1, $sourceLength;
         @currentRow[0]   = $i;
 
-        for $start..$end -> $j {
+        for $start..$end -> int $j {
             my Str $sourceCh = $source.substr($j - 1, 1);
             @currentRow[$j] = [min] 
                 @currentRow\[$j - 1] + 1,
                 @previousRow[$j    ] + 1,
                 @previousRow[$j - 1] + ($targetCh eq $sourceCh ?? 0 !! 1);
 
-            return int if ( @currentRow[0] == $j
+            return Int if ( @currentRow[0] == $j
                 && $max < (($diff => @currentRow[@currentRow[0]])
                     ?? ($diff - @currentRow[@currentRow[0]]) 
                     !! (@currentRow[@currentRow[0]] + $diff))
