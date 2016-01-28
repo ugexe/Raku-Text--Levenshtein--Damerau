@@ -129,4 +129,3 @@ sub ld (Str $source is copy, Str $target is copy, Int $max? is copy) is export {
 
     return @currentRow[*-1] <= $max ?? @currentRow[*-1] !! Int;
 }
-
