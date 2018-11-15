@@ -15,7 +15,7 @@ method get_results {
 
     for @!sources -> $source {
         for @!targets -> $target {
-            @working.push(%!results{$source}{$target} = dld($source, $target));
+            @working.push(%!results{$source}{$target} //= dld($source, $target));
         }
     }
 
