@@ -1,37 +1,5 @@
 use v6;
-unit class Text::Levenshtein::Damerau;
-
-has str  @.targets        is rw;
-has str  @.sources        is rw;
-has int  $.max            is rw;  # int/-1 = no max distance
-has int  $.results_limit  is rw;  # Only return X closest results
-has Hash %.results        is rw;
-has int  $.best_distance  is rw;
-has str  $.best_target    is rw;
-has str  $.best_source    is rw;
-
-method get_results {
-    my @working;
-
-    for @!sources -> $source {
-        for @!targets -> $target {
-            @working.push(%!results{$source}{$target} //= dld($source, $target));
-        }
-    }
-
-    for %!results.kv -> $source, $targets {
-        for $targets.kv -> $target, $distance {
-            if !$!best_distance || $!best_distance > $distance {
-                $!best_target   = $target;
-                $!best_distance = $distance;
-                $!best_source   = $source if @!sources.elems > 1;
-            }
-        }
-    }
-
-    return %!results;
-}
-
+unit module Text::Levenshtein::Damerau;
 
 sub dld (str $source is copy, str $target is copy, int $max? is copy --> Int) is export {
     my int $sourceLength = $source.chars;
