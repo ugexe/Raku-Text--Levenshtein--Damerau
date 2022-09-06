@@ -1,6 +1,6 @@
-use v6;
-use Test;
+use Test:ver<6.c+>;
 plan 32;
+
 use Text::Levenshtein::Damerau;
 
 
