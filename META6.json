@@ -1,15 +1,17 @@
 {
-    "perl"         : "6.*",
     "name"         : "Text::Levenshtein::Damerau",
     "version"      : "0.2.0",
     "description"  : "Calculate Levenshtein or Damerau Levenshtein edit distances for strings",
     "auth"         : "github:ugexe",
     "license"      : "Artistic-2.0",
     "depends"      : [ ],
-    "test-depends" : [ "Test" ],
+    "test-depends" : [ "Test:ver<6.c+>" ],
     "provides" : {
-        "Text::Levenshtein::Damerau": "lib/Text/Levenshtein/Damerau.pm6"
+        "Text::Levenshtein::Damerau": "lib/Text/Levenshtein/Damerau.rakumod"
     },
-    "source-url"  : "git://github.com/ugexe/Perl6-Text--Levenshtein--Damerau.git",
+    "support"     : {
+        "bugtracker" : "https://github.com/ugexe/Raku-Text--Levenshtein--Damerau/issues",
+        "source"     : "https://github.com/ugexe/Raku-Text--Levenshtein--Damerau.git"
+    },
     "tags" : [ "levenshtein", "typos" ]
 }

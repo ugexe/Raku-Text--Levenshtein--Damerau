@@ -1,4 +1,3 @@
-use v6;
 use Text::Levenshtein::Damerau;
 
 my Str @names = ( 
